@@ -82,6 +82,76 @@ run new process inside container
 docker exec -it <container_id> bash
 ```
 
+```shell script
+# stop docker container
+docker ps -q
+0c68e1616a66
+
+# using SIGTERM
+docker stop 0c68e1616a66
+
+# using SIGKILL
+docker kill 0c68e1616a66
+
+# one-liner
+docker kill $(docker ps -q)
+```
+
+```shell script
+# see space usage
+docker system df
+```
+
+```shell script
+# remove stopped container
+docker rm <container_id>
+
+# remove running container
+docker rm <container_id> -f
+
+# remove docker image by id/name
+docker rmi <image_id>
+
+# remove all containers
+docker rm $(docker ps -a -q)
+
+# remove all images
+docker rmi $(docker images -q)
+```
+
+## Docker machine
+```
+# is not a part of docker anymore, it have to be installed separatelly (at least on OSX)
+brew install docker-machine
+```
+
+```shell script
+# display a list of machines
+docker-machine ls
+
+# create new host
+docker-machine create <machine-name>
+
+# switch to another machine
+# important! after this command, all docker commands will be invoked on remote docker host <machine-name>
+eval $(docker-machine env <machine-name>)
+
+# switch back to local docker
+eval $(docker-machine env --unset)
+
+# remove machine
+docker-machine rm <machine-name>
+```
+
+```shell script
+export GOOGLE_PROJECT=<GCLOUD_PROJECT_ID>
+docker-machine create --driver google \
+ --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+ --google-machine-type n1-standard-1 \
+ --google-zone europe-west1-b \
+ docker-host
+```
+
 ## The task *
 > Describe Container vs image difference
 >
@@ -91,3 +161,7 @@ Docker image is readonly it could use another image (extend) as a base. Image co
 - https://docs.travis-ci.com/user/notifications/#configuring-slack-notifications
 - https://docs.docker.com/engine/reference/commandline
 - https://phoenixnap.com/kb/docker-image-vs-container
+- https://ru.wikipedia.org/wiki/Сигнал_(Unix)
+- https://github.com/jpetazzo/dind
+- https://docs.docker.com/engine/security/userns-remap/
+- https://docs.docker.com/engine/reference/run/#example-run-htop-inside-a-container
