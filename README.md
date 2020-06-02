@@ -82,6 +82,11 @@ run new process inside container
 docker exec -it <container_id> bash
 ```
 
+## The task *
+> Describe Container vs image difference
+>
+Docker image is readonly it could use another image (extend) as a base. Image contains the app dependencies and libraries. Docker container has read+write layer and run docker image in runtime virtual environment, so container depends on image. Container provides the final phase of virtualization.
+
 ## Helpful links
 - https://docs.travis-ci.com/user/notifications/#configuring-slack-notifications
 - https://docs.docker.com/engine/reference/commandline

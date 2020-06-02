@@ -1,0 +1,14 @@
+REPOSITORY                     TAG                 IMAGE ID            CREATED              SIZE
+yourname/ubuntu-tmp-file       latest              e532675b5028        About a minute ago   125MB
+ubuntu                         16.04               005d2078bdfa        5 weeks ago          125MB
+openzipkin/zipkin              latest              21de5312a5fb        3 months ago         153MB
+hello-world                    latest              bf756fb1ae65        5 months ago         13.3kB
+sport-republic-docker_phpfpm   latest              5aa9ca08086b        6 months ago         370MB
+mariadb                        latest              c1c9e6fba07a        6 months ago         355MB
+nginx                          latest              540a289bab6c        7 months ago         126MB
+phpmyadmin/phpmyadmin          latest              91490af22618        7 months ago         454MB
+php                            5.6-fpm             3458979c7744        16 months ago        344MB
+
+
+Container vs image difference
+Docker image is readonly it could use another image (extend) as a base. Image contains the app dependencies and libraries. Docker container has read+write layer and run docker image in runtime virtual environment, so container depends on image. Container provides the final phase of virtualization.
