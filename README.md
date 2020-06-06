@@ -71,6 +71,15 @@ Docker run - flags:
 docker run -it ubuntu:16.04 bash
 ```
 
+
+```shell script
+# see logs
+docker logs <container_id|container_name> -f
+
+# see fs changes
+docker diff <container_id|container_name>
+```
+
 **-d** run container in background mode (as daemon)
 **-t** create TTY
 ```shell script
@@ -78,8 +87,8 @@ docker run -dt nginx:latest
 ```
 
 ```shell script
-run new process inside container
-docker exec -it <container_id> bash
+# run new process inside container (attach to bash)
+docker exec -it <container_id|container_name> bash
 ```
 
 ```shell script
@@ -150,6 +159,48 @@ docker-machine create --driver google \
  --google-machine-type n1-standard-1 \
  --google-zone europe-west1-b \
  docker-host
+```
+
+Make the new image and run the container
+```shell script
+# create docker image - see dot (.) is required - it define a path to the docker context
+# "-t" creates a tag
+docker build -t reddit:latest .
+
+# run container
+docker run --name reddit -d --network=host reddit:latest
+
+# see result
+docker-machine ls
+NAME          ACTIVE   DRIVER   STATE     URL                       SWARM   DOCKER      ERRORS
+docker-host   *        google   Running   tcp://34.76.235.37:2376           v19.03.11
+```
+
+now, visit the page http://34.76.235.37:9292 - it will not be accessible because of firewall disallow it.
+Lets reconfigure the firewall rules:
+```shell script
+gcloud compute firewall-rules create reddit-app \
+ --allow tcp:9292 \
+ --target-tags=docker-machine \
+ --description="Allow PUMA connections" \
+ --direction=INGRESS
+```
+
+now, visit the page http://34.76.235.37:9292 again it should be accessible.
+
+Push it into https://dockerhub.com
+```shell script
+# login into dockerhub
+docker login
+
+# push
+docker tag reddit:latest <your-login>/otus-reddit:1.0
+docker push <your-login>/otus-reddit:1.0
+```
+
+then, check it in another terminal
+```shell script
+docker run --name reddit -d -p 9292:9292 <your-login>/otus-reddit:1.0
 ```
 
 ## The task *
