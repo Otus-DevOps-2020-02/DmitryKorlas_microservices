@@ -208,6 +208,22 @@ docker run --name reddit -d -p 9292:9292 <your-login>/otus-reddit:1.0
 >
 Docker image is readonly it could use another image (extend) as a base. Image contains the app dependencies and libraries. Docker container has read+write layer and run docker image in runtime virtual environment, so container depends on image. Container provides the final phase of virtualization.
 
+## The task **
+> Automate container running
+> - create an image with docker inside using packer
+> - create terraform environment using dynamic inventory. Amount of VM's should be configurable by the parameter.
+> - use ansible playbooks
+> - run container from this lecture <your-login>/otus-reddit:1.0
+>
+How to use:
+prepare `packer/variables.json`
+```shell script
+cd docker-monolyth/infra
+
+# create an image in GCP
+./build_packer_image.sh
+```
+
 ## Helpful links
 - https://docs.travis-ci.com/user/notifications/#configuring-slack-notifications
 - https://docs.docker.com/engine/reference/commandline
@@ -216,3 +232,5 @@ Docker image is readonly it could use another image (extend) as a base. Image co
 - https://github.com/jpetazzo/dind
 - https://docs.docker.com/engine/security/userns-remap/
 - https://docs.docker.com/engine/reference/run/#example-run-htop-inside-a-container
+- https://github.com/bcicen/ctop
+- https://www.rechberger.io/tutorial-install-docker-using-ansible-on-a-remote-server/

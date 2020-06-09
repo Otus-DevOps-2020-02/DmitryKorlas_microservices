@@ -1,0 +1,37 @@
+{
+  "variables": {
+	"project_id": null,
+	"source_image_family": null,
+	"machine_type": "f1-micro",
+	"image_description": "VM with pre-installed docker",
+	"tags": "docker",
+	"network": "default",
+	"disk_type": "pd-standard",
+	"disk_size": "10"
+  },
+  "builders": [
+	{
+	  "type": "googlecompute",
+	  "project_id": "{{user `project_id`}}",
+	  "image_name": "docker-base-{{timestamp}}",
+	  "image_family": "docker-base",
+	  "source_image_family": "{{user `source_image_family`}}",
+	  "zone": "europe-west1-b",
+	  "ssh_username": "appuser",
+	  "machine_type": "{{user `machine_type`}}",
+	  "image_description": "{{user `image_description`}}",
+	  "tags": "{{user `tags`}}",
+	  "network": "{{user `network`}}",
+	  "disk_type": "{{user `disk_type`}}",
+	  "disk_size": "{{user `disk_size`}}"
+	}
+  ],
+  "provisioners": [
+    {
+      "type": "ansible",
+      "extra_arguments": ["-vvvv"],
+      "ansible_env_vars": ["ANSIBLE_ROLES_PATH={{ pwd }}/ansible/roles"],
+      "playbook_file": "ansible/playbooks/install_docker.yml"
+    }
+  ]
+}
