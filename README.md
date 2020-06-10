@@ -216,12 +216,17 @@ Docker image is readonly it could use another image (extend) as a base. Image co
 > - run container from this lecture <your-login>/otus-reddit:1.0
 >
 How to use:
-prepare `packer/variables.json`
+prepare `packer/variables.json` and `terraform/terraform.tfvars`
 ```shell script
 cd docker-monolyth/infra
 
 # create an image in GCP
 ./build_packer_image.sh
+
+# create instances
+cd terraform
+terraform init
+terraform plan
 ```
 
 ## Helpful links
