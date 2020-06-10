@@ -217,16 +217,23 @@ Docker image is readonly it could use another image (extend) as a base. Image co
 >
 How to use:
 prepare `packer/variables.json` and `terraform/terraform.tfvars`
+activate service-account in gcloud console. Follow instructions [creating-managing-service-account-keys](https://cloud.google.com/iam/docs/creating-managing-service-account-keys#iam-service-account-keys-create-gcloud)
 ```shell script
-cd docker-monolyth/infra
+cd REPO/docker-monolyth/infra
 
 # create an image in GCP
 ./build_packer_image.sh
 
 # create instances
-cd terraform
+cd REPO/docker-monolyth/infra/terraform
 terraform init
 terraform plan
+
+# check dynamic inventory works
+cd REPO/docker-monolyth/infra/ansible
+ansible-inventory --graph
+ansible all -m ping
+
 ```
 
 ## Helpful links
