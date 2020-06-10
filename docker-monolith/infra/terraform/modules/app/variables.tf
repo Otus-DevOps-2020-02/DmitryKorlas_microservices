@@ -14,3 +14,8 @@ variable app_disk_image {
   description = "Disk image for docker monolith app"
   default     = "docker-base"
 }
+
+variable "instances_amount" {
+  description = "Amount of required instances of the app"
+  default     = 1
+}

@@ -25,6 +25,11 @@ variable app_disk_image {
   default     = "docker-base"
 }
 
+variable app_instances_amount {
+  description = "Amount of app instances to create"
+  default     = 1
+}
+
 variable vpc_ssh_allowed_range {
   description = "A list of addresses to access via ssh"
   type        = list(string)
