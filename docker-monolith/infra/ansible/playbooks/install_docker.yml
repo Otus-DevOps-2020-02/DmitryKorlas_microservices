@@ -1,5 +1,6 @@
 # thanks to
 # https://www.rechberger.io/tutorial-install-docker-using-ansible-on-a-remote-server/
+# https://www.techrepublic.com/article/how-to-deploy-a-container-with-ansible/
 ---
 - name: Install Docker
   hosts: all
@@ -14,6 +15,7 @@
       - gnupg-agent
       - software-properties-common
     USER: "appuser"
+    ansible_python_interpreter: /usr/bin/python3
 
   tasks:
     - name: Update apt packages
@@ -48,7 +50,7 @@
 
     - name: Install Docker
       apt:
-        name: "docker-ce"
+        name: ['docker-ce', 'docker-ce-cli']
         state: present
         force_apt_get: "yes"
 
@@ -82,6 +84,17 @@
         url: https://github.com/bcicen/ctop/releases/download/v{{ CTOP_VERSION }}/ctop-{{ CTOP_VERSION }}-linux-amd64
         dest: "/usr/local/bin/ctop"
         mode: 0755
+
+    - name: Install packages needed for Ansible
+      apt:
+        pkg:
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+
+    - name: Install python Docker Module for Ansible
+      pip:
+        name: docker
 
     - name: Reboot server in order for changes to take place
       shell: "sleep 1 && reboot"

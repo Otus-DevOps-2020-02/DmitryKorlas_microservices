@@ -224,7 +224,7 @@ cd REPO/docker-monolyth/infra
 # create an image in GCP
 ./build_packer_image.sh
 
-# create instances
+# create vm instances
 cd REPO/docker-monolyth/infra/terraform
 terraform init
 terraform plan
@@ -234,6 +234,9 @@ cd REPO/docker-monolyth/infra/ansible
 ansible-inventory --graph
 ansible all -m ping
 
+# run monolith container
+cd REPO/docker-monolyth/infra/ansible
+ansible-playbook ./playbooks/run_monolith_container.yml
 ```
 
 ## Helpful links
