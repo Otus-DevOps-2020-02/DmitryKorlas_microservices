@@ -253,6 +253,33 @@ ansible-playbook ./playbooks/run_monolith_container.yml
 
 # Homework 16: Docker images and microservices
 
+```shell script
+# switch docker env to the docker host (created in previouse homework)
+eval $(docker-machine env docker-host)
+
+# download the latest mongo image
+docker pull mongo:latest
+
+# build images
+# dmitrykorlas is <your-dockerhub-login>
+docker build -t dmitrykorlas/post:1.0 ./post-py
+docker build -t dmitrykorlas/comment:1.0 ./comment
+docker build -t dmitrykorlas/ui:1.0 ./ui
+
+# create dedicated bridge network
+docker network create reddit
+
+# run containers
+docker run -d --network=reddit \
+  --network-alias=post_db --network-alias=comment_db mongo:latest
+docker run -d --network=reddit \
+  --network-alias=post dmitrykorlas/post:1.0
+docker run -d --network=reddit \
+  --network-alias=comment dmitrykorlas/comment:1.0
+docker run -d --network=reddit \
+  -p 9292:9292 dmitrykorlas/ui:1.0
+```
+
 ## Helpful links
 - https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
 - https://github.com/hadolint/hadolint
