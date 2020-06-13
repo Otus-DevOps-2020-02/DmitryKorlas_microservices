@@ -249,3 +249,10 @@ ansible-playbook ./playbooks/run_monolith_container.yml
 - https://docs.docker.com/engine/reference/run/#example-run-htop-inside-a-container
 - https://github.com/bcicen/ctop
 - https://www.rechberger.io/tutorial-install-docker-using-ansible-on-a-remote-server/
+
+
+# Homework 16: Docker images and microservices
+
+## Helpful links
+- https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+- https://github.com/hadolint/hadolint
