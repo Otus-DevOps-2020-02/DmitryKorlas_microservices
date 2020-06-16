@@ -271,15 +271,41 @@ docker network create reddit
 
 # run containers
 docker run -d --network=reddit \
-  --network-alias=post_db --network-alias=comment_db mongo:latest
+  --network-alias=post_db \
+  --network-alias=comment_db mongo:latest
+
 docker run -d --network=reddit \
   --network-alias=post dmitrykorlas/post:1.0
+
 docker run -d --network=reddit \
   --network-alias=comment dmitrykorlas/comment:1.0
+
 docker run -d --network=reddit \
   -p 9292:9292 dmitrykorlas/ui:1.0
 ```
 
+
+## Task *
+> run containers using custom network aliases. Setup communication between them using env variables.
+
+```shell script
+docker run -d --network=reddit \
+  --network-alias=service_post_db \
+  --network-alias=service_comment_db mongo:latest
+
+docker run -d --network=reddit \
+  --env POST_DATABASE_HOST=service_post_db \
+  --network-alias=service_post dmitrykorlas/post:1.0
+
+docker run -d --network=reddit \
+  --env COMMENT_DATABASE_HOST=service_comment_db \
+  --network-alias=service_comment dmitrykorlas/comment:1.0
+
+docker run -d --network=reddit \
+  --env POST_SERVICE_HOST=service_post \
+  --env COMMENT_SERVICE_HOST=service_comment \
+  -p 9292:9292 dmitrykorlas/ui:1.0
+```
 ## Helpful links
 - https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
 - https://github.com/hadolint/hadolint
