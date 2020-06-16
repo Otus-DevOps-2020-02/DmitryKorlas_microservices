@@ -1,0 +1,23 @@
+plugin: gcp_compute
+projects:
+  - docker-279121
+filters: []
+service_account_file: ~/gcloud_service_account_microservices.json
+auth_kind: serviceaccount
+scopes:
+  - 'https://www.googleapis.com/auth/cloud-platform'
+  - 'https://www.googleapis.com/auth/compute.readonly'
+
+# produce two groups of hosts, using 'name' of resource
+groups:
+  app: "'docker-monolith-' in name"
+hostnames:
+  # List host by name instead of the default public ip (see in `ansible-inventory --graph output`)
+  - name
+  - public_ip
+
+# create two addition variables to be used in playbooks
+compose:
+  # Set an inventory parameter to use the Public IP address to connect to the host
+  ansible_host: networkInterfaces[0].accessConfigs[0].natIP
+  ansible_internal_host: networkInterfaces[0].networkIP
