@@ -161,6 +161,13 @@ docker-machine create --driver google \
  docker-host
 ```
 
+optionally, we able to login into the machine via ssh
+```shell script
+docker-machine ssh docker-host
+pwd
+/home/docker-user
+```
+
 Make the new image and run the container
 ```shell script
 # create docker image - see dot (.) is required - it define a path to the docker context
@@ -281,6 +288,7 @@ docker run -d --network=reddit \
   --network-alias=comment dmitrykorlas/comment:1.0
 
 docker run -d --network=reddit \
+  --name=service_ui \
   -p 9292:9292 dmitrykorlas/ui:1.0
 ```
 
@@ -306,6 +314,20 @@ docker run -d --network=reddit \
   --env COMMENT_SERVICE_HOST=service_comment \
   -p 9292:9292 dmitrykorlas/ui:1.0
 ```
+
+## Task **
+> - Try to use Alpine based image
+> - Find how to reduce the image size
+
+- Created multi-stage build for reducing an image size. See result in **Dockerfile.3.0** file.
+- Used lightweight **ruby:2.6.5-alpine** image vs initial heavy **ruby:2.2**.
+- The final sizes of images: v1.0=**770MB**, v2.0=**447MB**, v3.0=**67.2MB**
+
 ## Helpful links
 - https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
 - https://github.com/hadolint/hadolint
+- https://pypi.org/project/py-zipkin/
+- https://hub.helm.sh/charts/stable/kube-ops-view
+- https://lipanski.com/posts/dockerfile-ruby-best-practices
+- https://github.com/codeRIT/brickhack.io/blob/4bc5629a2bea97b88953b0a9cccaf9a71e3143ca/Dockerfile
+- https://github.com/bmedici/service-graph/blob/a643ea7571e106ac682b6a564b0532b8272e8fb2/Dockerfile
