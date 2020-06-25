@@ -397,3 +397,11 @@ Check docker-proxy
 ```shell script
 ps ax | grep docker-proxy
 ```
+
+## Docker compose
+
+```shell script
+cd ./src
+export USERNAME=dmitrykorlas
+docker-compose up -d
+```
