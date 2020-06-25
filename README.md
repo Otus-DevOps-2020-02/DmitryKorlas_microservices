@@ -292,6 +292,37 @@ docker run -d --network=reddit \
   -p 9292:9292 dmitrykorlas/ui:1.0
 ```
 
+### Run containers with persistent storage
+
+```shell script
+
+# kill+remove (optional)
+docker kill $(docker ps -aq)
+
+docker volume create reddit_db
+
+# run containers
+docker run -d --network=reddit \
+  --network-alias=post_db \
+  --network-alias=comment_db \
+  -v reddit_db:/data/db mongo:latest
+
+docker run -d --network=reddit \
+  --network-alias=post dmitrykorlas/post:1.0
+
+docker run -d --network=reddit \
+  --network-alias=comment dmitrykorlas/comment:1.0
+
+docker run -d --network=reddit \
+  --name=service_ui \
+  -p 9292:9292 dmitrykorlas/ui:3.0
+
+# now, the data will not be lost between containers re-run
+# we can inspect containers via this command:
+docker volume ls
+docker volume inspect reddit_db
+```
+
 
 ## Task *
 > run containers using custom network aliases. Setup communication between them using env variables.
