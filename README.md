@@ -161,6 +161,13 @@ docker-machine create --driver google \
  docker-host
 ```
 
+optionally, we able to login into the machine via ssh
+```shell script
+docker-machine ssh docker-host
+pwd
+/home/docker-user
+```
+
 Make the new image and run the container
 ```shell script
 # create docker image - see dot (.) is required - it define a path to the docker context
@@ -249,3 +256,109 @@ ansible-playbook ./playbooks/run_monolith_container.yml
 - https://docs.docker.com/engine/reference/run/#example-run-htop-inside-a-container
 - https://github.com/bcicen/ctop
 - https://www.rechberger.io/tutorial-install-docker-using-ansible-on-a-remote-server/
+
+
+# Homework 16: Docker images and microservices
+
+```shell script
+# switch docker env to the docker host (created in previouse homework)
+eval $(docker-machine env docker-host)
+
+# download the latest mongo image
+docker pull mongo:latest
+
+# build images
+# dmitrykorlas is <your-dockerhub-login>
+docker build -t dmitrykorlas/post:1.0 ./post-py
+docker build -t dmitrykorlas/comment:1.0 ./comment
+docker build -t dmitrykorlas/ui:1.0 ./ui
+
+# create dedicated bridge network
+docker network create reddit
+
+# run containers
+docker run -d --network=reddit \
+  --network-alias=post_db \
+  --network-alias=comment_db mongo:latest
+
+docker run -d --network=reddit \
+  --network-alias=post dmitrykorlas/post:1.0
+
+docker run -d --network=reddit \
+  --network-alias=comment dmitrykorlas/comment:1.0
+
+docker run -d --network=reddit \
+  --name=service_ui \
+  -p 9292:9292 dmitrykorlas/ui:1.0
+```
+
+### Run containers with persistent storage
+
+```shell script
+
+# kill+remove (optional)
+docker kill $(docker ps -aq)
+
+docker volume create reddit_db
+
+# run containers
+docker run -d --network=reddit \
+  --network-alias=post_db \
+  --network-alias=comment_db \
+  -v reddit_db:/data/db mongo:latest
+
+docker run -d --network=reddit \
+  --network-alias=post dmitrykorlas/post:1.0
+
+docker run -d --network=reddit \
+  --network-alias=comment dmitrykorlas/comment:1.0
+
+docker run -d --network=reddit \
+  --name=service_ui \
+  -p 9292:9292 dmitrykorlas/ui:3.0
+
+# now, the data will not be lost between containers re-run
+# we can inspect containers via this command:
+docker volume ls
+docker volume inspect reddit_db
+```
+
+
+## Task *
+> run containers using custom network aliases. Setup communication between them using env variables.
+
+```shell script
+docker run -d --network=reddit \
+  --network-alias=service_post_db \
+  --network-alias=service_comment_db mongo:latest
+
+docker run -d --network=reddit \
+  --env POST_DATABASE_HOST=service_post_db \
+  --network-alias=service_post dmitrykorlas/post:1.0
+
+docker run -d --network=reddit \
+  --env COMMENT_DATABASE_HOST=service_comment_db \
+  --network-alias=service_comment dmitrykorlas/comment:1.0
+
+docker run -d --network=reddit \
+  --env POST_SERVICE_HOST=service_post \
+  --env COMMENT_SERVICE_HOST=service_comment \
+  -p 9292:9292 dmitrykorlas/ui:1.0
+```
+
+## Task **
+> - Try to use Alpine based image
+> - Find how to reduce the image size
+
+- Created multi-stage build for reducing an image size. See result in **Dockerfile.3.0** file.
+- Used lightweight **ruby:2.6.5-alpine** image vs initial heavy **ruby:2.2**.
+- The final sizes of images: v1.0=**770MB**, v2.0=**447MB**, v3.0=**67.2MB**
+
+## Helpful links
+- https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+- https://github.com/hadolint/hadolint
+- https://pypi.org/project/py-zipkin/
+- https://hub.helm.sh/charts/stable/kube-ops-view
+- https://lipanski.com/posts/dockerfile-ruby-best-practices
+- https://github.com/codeRIT/brickhack.io/blob/4bc5629a2bea97b88953b0a9cccaf9a71e3143ca/Dockerfile
+- https://github.com/bmedici/service-graph/blob/a643ea7571e106ac682b6a564b0532b8272e8fb2/Dockerfile

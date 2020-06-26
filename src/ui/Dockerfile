@@ -1,0 +1,37 @@
+# fixed image version to prevent using random version
+FROM ruby:2.6.5-alpine as builder
+
+RUN apk add --update --no-cache \
+    build-base \
+    tzdata
+
+ENV APP_HOME /app
+RUN mkdir $APP_HOME
+WORKDIR $APP_HOME
+
+COPY Gemfile Gemfile.lock $APP_HOME/
+
+RUN bundle install --without development test -j4 --retry 3
+
+COPY . $APP_HOME/
+
+################
+FROM ruby:2.6.5-alpine
+ENV APP_HOME /app
+#ENV APP_USER appuser
+ENV POST_SERVICE_HOST post
+ENV POST_SERVICE_PORT 5000
+ENV COMMENT_SERVICE_HOST comment
+ENV COMMENT_SERVICE_PORT 9292
+
+# do not run as root, use special user
+RUN adduser -D appuser
+USER appuser
+
+# Copy app with gems from builder
+COPY --from=builder /usr/local/bundle/ /usr/local/bundle/
+COPY --from=builder --chown=appuser:appuser $APP_HOME $APP_HOME
+
+WORKDIR $APP_HOME
+
+CMD ["puma"]
