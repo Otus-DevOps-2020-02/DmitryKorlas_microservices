@@ -405,3 +405,10 @@ cd ./src
 export USERNAME=dmitrykorlas
 docker-compose up -d
 ```
+
+To make the app be available on the 80 port, we have to allow firewall on GCP on the docker-host image
+
+To re-create images use this command:
+```shell script
+docker-compose up -d --force-recreate
+```
