@@ -412,3 +412,12 @@ To re-create images use this command:
 ```shell script
 docker-compose up -d --force-recreate
 ```
+
+`docker-compose` use some kind of special naming of containers. See output of the "names" column of command `docker ps`:
+```shell script
+src_post_db_1
+src_ui_1
+src_comment_1
+src_post_db_1
+```
+we can manage it using `container_name` parameter

@@ -23,6 +23,8 @@ services:
       - front_net
   ui:
     build: ./ui
+    # uncomment to use custom name of container
+    # container_name: app_ui
     image: ${USERNAME}/ui:${UI_IMAGE_VERSION}
     ports:
       - "${UI_PORT}:9292"
