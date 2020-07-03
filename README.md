@@ -421,3 +421,6 @@ src_comment_1
 src_post_db_1
 ```
 we can manage it using `container_name` parameter
+
+## Helpful links
+- https://docs.docker.com/compose/extends/#understanding-multiple-compose-files

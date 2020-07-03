@@ -1,0 +1,13 @@
+version: "3.3"
+
+services:
+  post:
+    volumes:
+      - ./post-py:/app
+  comment:
+    volumes:
+      - ./comment:/app
+  ui:
+    volumes:
+      - ./ui:/app
+    command: puma --debug -w 2
