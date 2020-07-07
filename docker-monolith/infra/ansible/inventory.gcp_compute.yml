@@ -11,6 +11,7 @@ scopes:
 # produce two groups of hosts, using 'name' of resource
 groups:
   app: "'docker-monolith-' in name"
+  gitlab: "'gitlab-ci' in name"
 hostnames:
   # List host by name instead of the default public ip (see in `ansible-inventory --graph output`)
   - name

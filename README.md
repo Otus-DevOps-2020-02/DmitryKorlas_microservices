@@ -424,3 +424,56 @@ we can manage it using `container_name` parameter
 
 ## Helpful links
 - https://docs.docker.com/compose/extends/#understanding-multiple-compose-files
+
+
+# Homework 17: GitLab CI
+
+creating a machine: see requirements page = https://docs.gitlab.com/ce/install/requirements.html
+```shell script
+gcloud compute instances create "gitlab-ci" \
+	--image-family="ubuntu-1604-lts" \
+	--image-project=ubuntu-os-cloud \
+	--machine-type="n1-standard-1" \
+	--boot-disk-size="100" \
+	--zone="europe-west1-b" \
+	--tags="default-allow-http,default-allow-ssh,http-server,https-server"
+```
+
+Lightweight setup process to be used for demo purposes https://docs.gitlab.com/omnibus/README.html, https://docs.gitlab.com/omnibus/docker/README.html.
+Is bad for maintenance, but ok for quick-your of GitLab CI features overview.
+
+Install docker using playbooks from the previous home work:
+```shell script
+cd REPO_ROOT/docker-monolith/infra/ansible
+ansible-inventory --graph
+ansible-playbook ./playbooks/install_docker.yml --limit gitlab
+```
+
+Install gitlab
+```shell script
+mkdir -p /srv/gitlab/config /srv/gitlab/data /srv/gitlab/logs
+cd /srv/gitlab/
+touch docker-compose.yml
+```
+
+```shell script
+web:
+  image: 'gitlab/gitlab-ce:latest'
+  restart: always
+  hostname: 'gitlab.example.com'
+  environment:
+    GITLAB_OMNIBUS_CONFIG: |
+      external_url 'http://<YOUR-VM-IP>'
+  ports:
+    - '80:80'
+    - '443:443'
+    - '2222:22'
+  volumes:
+    - '/srv/gitlab/config:/etc/gitlab'
+    - '/srv/gitlab/logs:/var/log/gitlab'
+    - '/srv/gitlab/data:/var/opt/gitlab'
+```
+
+script taken from https://docs.gitlab.com/omnibus/docker/README.html#install-gitlab-using-docker-compose
+
+Visit gitlab on http://<YOUR-VM-IP>

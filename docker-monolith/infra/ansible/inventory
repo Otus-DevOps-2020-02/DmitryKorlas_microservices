@@ -3,3 +3,6 @@ appserver ansible_host=35.241.241.155
 
 [db]
 dbserver ansible_host=35.241.190.22
+
+[gitlab]
+gitlab-ci ansible_host=34.78.40.221
