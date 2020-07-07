@@ -477,3 +477,49 @@ web:
 script taken from https://docs.gitlab.com/omnibus/docker/README.html#install-gitlab-using-docker-compose
 
 Visit gitlab on http://<YOUR-VM-IP>
+
+After setup the new password and sign in, create group **homework** and repository **example**.
+
+**Install gitlab-runner**
+Make ssh connection to the `gitlab-ci` host
+```shell script
+docker run -d --name gitlab-runner --restart always \
+  -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  gitlab/gitlab-runner:latest
+```
+
+register runner
+```shell script
+docker exec -it gitlab-runner gitlab-runner register --run-untagged --locked=false
+```
+It will ask few questions:
+```shell script
+Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
+http://34.78.40.221/
+Please enter the gitlab-ci token for this runner:
+yk5mBRb4tYaUqwqZ3xsg # copy it from CI/CD settings of the repository you created
+Please enter the gitlab-ci description for this runner:
+[58b845540b82]: my-runner
+Please enter the gitlab-ci tags for this runner (comma separated):
+linux,xenial,ubuntu,docker
+Registering runner... succeeded                     runner=yk5mBRb4
+Please enter the executor: ssh, custom, docker, parallels, shell, kubernetes, docker-ssh, virtualbox, docker+machine, docker-ssh+machine:
+docker
+Please enter the default Docker image (e.g. ruby:2.6):
+alpine:latest
+Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
+root@gitlab-ci:/home/appuser#
+```
+
+Create an executor code:
+```shell script
+git clone https://github.com/express42/reddit.git && rm -rf ./reddit/.git
+git add reddit/
+git commit -m "gitlab-ci-1: Add reddit app"
+git push gitlab gitlab-ci-1
+```
+
+see content of `.gitlab-ci.yml`
+
+After push to the repo, the pipeline should run the tests and other described things
