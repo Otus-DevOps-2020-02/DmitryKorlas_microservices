@@ -362,3 +362,65 @@ docker run -d --network=reddit \
 - https://lipanski.com/posts/dockerfile-ruby-best-practices
 - https://github.com/codeRIT/brickhack.io/blob/4bc5629a2bea97b88953b0a9cccaf9a71e3143ca/Dockerfile
 - https://github.com/bmedici/service-graph/blob/a643ea7571e106ac682b6a564b0532b8272e8fb2/Dockerfile
+
+
+# Homework 16: Docker compose and network management
+
+```shell script
+docker run -ti --rm --network none joffotron/docker-net-tools -c ifconfig
+docker run -ti --rm --network host joffotron/docker-net-tools -c ifconfig
+```
+
+## run front_net + back_net docker configuration with the separate access to the db host
+```shell script
+# run docker build, see the instructions from the previous HW
+docker network create back_net --subnet=10.0.2.0/24
+docker network create front_net --subnet=10.0.1.0/24
+docker run -d --network=front_net -p 9292:9292 --name ui dmitrykorlas/ui:1.0
+docker run -d --network=back_net --name comment dmitrykorlas/comment:1.0
+docker run -d --network=back_net --name post dmitrykorlas/post:1.0
+
+docker run -d --network=back_net --name mongo_db \
+    --network-alias=post_db --network-alias=comment_db mongo:latest
+
+# connect post and connect to the second network
+docker network connect front_net post
+docker network connect front_net comment
+```
+
+Check iptables. See POSTROUTING section - this is how bridget network connects container with host.
+```shell script
+sudo iptables -nL -t nat
+```
+
+Check docker-proxy
+```shell script
+ps ax | grep docker-proxy
+```
+
+## Docker compose
+
+```shell script
+cd ./src
+export USERNAME=dmitrykorlas
+docker-compose up -d
+```
+
+To make the app be available on the 80 port, we have to allow firewall on GCP on the docker-host image
+
+To re-create images use this command:
+```shell script
+docker-compose up -d --force-recreate
+```
+
+`docker-compose` use some kind of special naming of containers. See output of the "names" column of command `docker ps`:
+```shell script
+src_post_db_1
+src_ui_1
+src_comment_1
+src_post_db_1
+```
+we can manage it using `container_name` parameter
+
+## Helpful links
+- https://docs.docker.com/compose/extends/#understanding-multiple-compose-files
