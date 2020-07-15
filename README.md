@@ -609,3 +609,19 @@ docker-compose -f docker-compose.yml up -d
 # use this command, if you run it on the local machine:
 docker-compose up -d
 ```
+
+In case app is not available, check the http/https ports is not blocked on GCP: check docker-host machine settings
+
+## check how it works
+let's stop post service
+```shell script
+docker-compose stop post
+```
+
+then, open the prometheus control panel and set **ui_health** into the search field.
+Click on *Execute* button and open the chart. You will see that it show UI service down.
+Check chart **ui_health_comment** the same way - it's available
+Check chart **ui_health_post** - it's down.
+
+Now, let's bring it to live using `docker-compose start post` command
+Check the carts again - it shows the service is UP.
