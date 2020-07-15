@@ -523,3 +523,38 @@ git push gitlab gitlab-ci-1
 see content of `.gitlab-ci.yml`
 
 After push to the repo, the pipeline should run the tests and other described things
+
+
+# Homework 18: Monitoring
+
+Run prometheus:
+```shell script
+gcloud compute firewall-rules create prometheus-default --allow tcp:9090
+gcloud compute firewall-rules create puma-default --allow tcp:9292
+
+export GOOGLE_PROJECT=docker-279121
+
+# create docker host
+docker-machine create --driver google \
+    --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+    --google-machine-type n1-standard-1 \
+    --google-zone europe-west1-b \
+    docker-host
+
+# configure local env
+eval $(docker-machine env docker-host)
+
+docker run --rm -p 9090:9090 -d --name prometheus prom/prometheus
+```
+
+```shell script
+# check the ip
+docker-machine ip docker-host
+34.88.251.183
+```
+
+then, visit the page http://34.88.251.183:9090 to see prometheus control panel.
+
+```shell script
+docker stop prometheus
+```
