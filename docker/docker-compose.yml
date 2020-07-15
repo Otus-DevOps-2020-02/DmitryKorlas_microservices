@@ -30,9 +30,24 @@ services:
       - "${UI_PORT}:9292"
     networks:
       - front_net
+
+  prometheus:
+    image: ${USERNAME}/prometheus:${PROMETHEUS_IMAGE_VERSION}
+    ports:
+      - '${PROMETHEUS_PORT}:9090'
+    volumes:
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention=1d' # store metrics 1d
+    networks:
+      - back_net
+      - front_net
+
 volumes:
   post_db:
-
+  prometheus_data:
 
 networks:
   back_net:

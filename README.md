@@ -527,7 +527,7 @@ After push to the repo, the pipeline should run the tests and other described th
 
 # Homework 18: Monitoring
 
-Run prometheus:
+## Run prometheus:
 ```shell script
 gcloud compute firewall-rules create prometheus-default --allow tcp:9090
 gcloud compute firewall-rules create puma-default --allow tcp:9292
@@ -557,4 +557,55 @@ then, visit the page http://34.88.251.183:9090 to see prometheus control panel.
 
 ```shell script
 docker stop prometheus
+```
+
+## connect prometheus to the puma application
+
+add this content into `monitoring/prometheus/Dockerfile`
+
+```shell script
+FROM prom/prometheus:v2.1.0
+ADD prometheus.yml /etc/prometheus/
+```
+
+add file `monitoring/prometheus/prometheus.yml`
+
+then, run docker build inside the `monitoring/prometheus`
+```shell script
+cd monitoring/prometheus
+export USER_NAME=dmitrykorlas
+docker build -t $USER_NAME/prometheus .
+
+dmitrykorlas is <YOUR_DOCKER_HUB_LOGIN>
+```
+
+Create builds of app components
+```shell script
+# in src/ui
+bash docker_build.sh
+
+# in src/post-py
+bash docker_build.sh
+
+# in src/comment
+bash docker_build.sh
+```
+
+or via batch script:
+```shell script
+for i in ui post-py comment; do cd src/$i; bash docker_build.sh; cd -; done
+```
+
+Modify `docker/docker-compose.yml` by adding new prometheus service
+
+check versions of images in the .env file (set to latest)
+
+run the compose
+```shell script
+cd docker
+# -f docker-compose.yml is added to omit using docker-compose.override.yml
+docker-compose -f docker-compose.yml up -d
+
+# use this command, if you run it on the local machine:
+docker-compose up -d
 ```
