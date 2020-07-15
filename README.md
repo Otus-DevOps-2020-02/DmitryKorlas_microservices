@@ -424,3 +424,102 @@ we can manage it using `container_name` parameter
 
 ## Helpful links
 - https://docs.docker.com/compose/extends/#understanding-multiple-compose-files
+
+
+# Homework 17: GitLab CI
+
+creating a machine: see requirements page = https://docs.gitlab.com/ce/install/requirements.html
+```shell script
+gcloud compute instances create "gitlab-ci" \
+	--image-family="ubuntu-1604-lts" \
+	--image-project=ubuntu-os-cloud \
+	--machine-type="n1-standard-1" \
+	--boot-disk-size="100" \
+	--zone="europe-west1-b" \
+	--tags="default-allow-http,default-allow-ssh,http-server,https-server"
+```
+
+Lightweight setup process to be used for demo purposes https://docs.gitlab.com/omnibus/README.html, https://docs.gitlab.com/omnibus/docker/README.html.
+Is bad for maintenance, but ok for quick-your of GitLab CI features overview.
+
+Install docker using playbooks from the previous home work:
+```shell script
+cd REPO_ROOT/docker-monolith/infra/ansible
+ansible-inventory --graph
+ansible-playbook ./playbooks/install_docker.yml --limit gitlab
+```
+
+Install gitlab
+```shell script
+mkdir -p /srv/gitlab/config /srv/gitlab/data /srv/gitlab/logs
+cd /srv/gitlab/
+touch docker-compose.yml
+```
+
+```shell script
+web:
+  image: 'gitlab/gitlab-ce:latest'
+  restart: always
+  hostname: 'gitlab.example.com'
+  environment:
+    GITLAB_OMNIBUS_CONFIG: |
+      external_url 'http://<YOUR-VM-IP>'
+  ports:
+    - '80:80'
+    - '443:443'
+    - '2222:22'
+  volumes:
+    - '/srv/gitlab/config:/etc/gitlab'
+    - '/srv/gitlab/logs:/var/log/gitlab'
+    - '/srv/gitlab/data:/var/opt/gitlab'
+```
+
+script taken from https://docs.gitlab.com/omnibus/docker/README.html#install-gitlab-using-docker-compose
+
+Visit gitlab on http://<YOUR-VM-IP>
+
+After setup the new password and sign in, create group **homework** and repository **example**.
+
+**Install gitlab-runner**
+Make ssh connection to the `gitlab-ci` host
+```shell script
+docker run -d --name gitlab-runner --restart always \
+  -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  gitlab/gitlab-runner:latest
+```
+
+register runner
+```shell script
+docker exec -it gitlab-runner gitlab-runner register --run-untagged --locked=false
+```
+It will ask few questions:
+```shell script
+Please enter the gitlab-ci coordinator URL (e.g. https://gitlab.com/):
+http://34.78.40.221/
+Please enter the gitlab-ci token for this runner:
+yk5mBRb4tYaUqwqZ3xsg # copy it from CI/CD settings of the repository you created
+Please enter the gitlab-ci description for this runner:
+[58b845540b82]: my-runner
+Please enter the gitlab-ci tags for this runner (comma separated):
+linux,xenial,ubuntu,docker
+Registering runner... succeeded                     runner=yk5mBRb4
+Please enter the executor: ssh, custom, docker, parallels, shell, kubernetes, docker-ssh, virtualbox, docker+machine, docker-ssh+machine:
+docker
+Please enter the default Docker image (e.g. ruby:2.6):
+alpine:latest
+Runner registered successfully. Feel free to start it, but if it's running already the config should be automatically reloaded!
+root@gitlab-ci:/home/appuser#
+```
+
+Create an executor code:
+```shell script
+git clone https://github.com/express42/reddit.git && rm -rf ./reddit/.git
+git add reddit/
+git commit -m "gitlab-ci-1: Add reddit app"
+git push gitlab gitlab-ci-1
+```
+
+see content of `.gitlab-ci.yml`
+
+After push to the repo, the pipeline should run the tests and other described things
