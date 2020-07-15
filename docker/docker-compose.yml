@@ -10,19 +10,19 @@ services:
           - post_db
           - comment_db
   post:
-    build: ../src/post-py
+    # build: ../src/post-py
     image: ${USERNAME}/post:${POST_IMAGE_VERSION}
     networks:
       - back_net
       - front_net
   comment:
-    build: ../src/comment
+    # build: ../src/comment
     image: ${USERNAME}/comment:${COMMENT_IMAGE_VERSION}
     networks:
       - back_net
       - front_net
   ui:
-    build: ../src/ui
+    # build: ../src/ui
     # uncomment to use custom name of container
     # container_name: app_ui
     image: ${USERNAME}/ui:${UI_IMAGE_VERSION}
