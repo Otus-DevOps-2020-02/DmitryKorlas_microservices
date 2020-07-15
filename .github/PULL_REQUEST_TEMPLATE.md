@@ -14,5 +14,5 @@
  - For example, follow the link http://localhost:8080
 
 ## PR checklist:
- - [ ] Added a label with the number pf homework
+ - [ ] Added a label with the number of homework
  - [ ] Added a label with the subject of homework
