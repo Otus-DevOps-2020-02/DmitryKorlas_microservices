@@ -687,3 +687,19 @@ As result, there are four builds available:
 - https://github.com/prometheus/node_exporter
 - https://github.com/prometheus/blackbox_exporter
 - https://github.com/google/cloudprober
+
+
+# Homework: Lecture 21. Monitoring visualisation.
+
+Prepare docker-host using docker-machine - see details in previous homework.
+
+Monitoring services moved to separate *docker-compose-monitoring.yml*
+Now, app and monitoring runs separately.
+```shell script
+docker-compose -f docker-compose.yml up -d
+docker-compose -f docker-compose-monitoring.yml up -d
+```
+
+
+## Helpful links:
+- https://github.com/google/cadvisor
