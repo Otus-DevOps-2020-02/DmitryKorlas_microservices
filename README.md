@@ -523,3 +523,167 @@ git push gitlab gitlab-ci-1
 see content of `.gitlab-ci.yml`
 
 After push to the repo, the pipeline should run the tests and other described things
+
+
+# Homework 18: Monitoring
+
+## Run prometheus:
+```shell script
+gcloud compute firewall-rules create prometheus-default --allow tcp:9090
+gcloud compute firewall-rules create puma-default --allow tcp:9292
+
+export GOOGLE_PROJECT=docker-279121
+
+# create docker host
+docker-machine create --driver google \
+    --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+    --google-machine-type n1-standard-1 \
+    --google-zone europe-west1-b \
+    docker-host
+
+# configure local env
+eval $(docker-machine env docker-host)
+
+docker run --rm -p 9090:9090 -d --name prometheus prom/prometheus
+```
+
+```shell script
+# check the ip
+docker-machine ip docker-host
+34.88.251.183
+```
+
+then, visit the page http://34.88.251.183:9090 to see prometheus control panel.
+
+```shell script
+docker stop prometheus
+```
+
+## connect prometheus to the puma application
+
+add this content into `monitoring/prometheus/Dockerfile`
+
+```shell script
+FROM prom/prometheus:v2.1.0
+ADD prometheus.yml /etc/prometheus/
+```
+
+add file `monitoring/prometheus/prometheus.yml`
+
+then, run docker build inside the `monitoring/prometheus`
+```shell script
+cd monitoring/prometheus
+export USER_NAME=dmitrykorlas
+docker build -t $USER_NAME/prometheus .
+
+dmitrykorlas is <YOUR_DOCKER_HUB_LOGIN>
+```
+
+Create builds of app components
+```shell script
+# in src/ui
+bash docker_build.sh
+
+# in src/post-py
+bash docker_build.sh
+
+# in src/comment
+bash docker_build.sh
+```
+
+or via batch script:
+```shell script
+for i in ui post-py comment; do cd src/$i; bash docker_build.sh; cd -; done
+```
+
+Modify `docker/docker-compose.yml` by adding new prometheus service
+
+check versions of images in the .env file (set to latest)
+
+run the compose
+```shell script
+cd docker
+# -f docker-compose.yml is added to omit using docker-compose.override.yml
+docker-compose -f docker-compose.yml up -d
+
+# use this command, if you run it on the local machine:
+docker-compose up -d
+```
+
+In case app is not available, check the http/https ports is not blocked on GCP: check docker-host machine settings
+
+## check how it works
+let's stop post service
+```shell script
+docker-compose stop post
+```
+
+then, open the prometheus control panel and set **ui_health** into the search field.
+Click on *Execute* button and open the chart. You will see that it show UI service down.
+Check chart **ui_health_comment** the same way - it's available
+Check chart **ui_health_post** - it's down.
+
+Now, let's bring it to live using `docker-compose start post` command
+Check the carts again - it shows the service is UP.
+
+## Exporters
+Is a some kind of agent to collect te metrics. When we unable to use prometheus inside the app, exporters can be suitable.
+It transforms the status of application into the prometheus compatible metrics format.
+
+Let's add new service in *docker-compose.yml* for node_exporter named `node-exporter`.
+
+add new job into the prometheus config file at *monitoring/prometheus/prometheus.yml*
+```shell script
+- job_name: 'node'
+  static_configs:
+    - targets:
+      - 'node-exporter:9100'
+```
+
+then, build the new image:
+```shell script
+cd monitoring/prometheus
+docker build -t $USER_NAME/prometheus .
+```
+
+let's recreate our services
+```shell script
+docker-compose down
+docker-compose -f docker-compose.yml up -d
+```
+
+Check targets on prometheus control panel - new endpoint named 'node' appears
+
+Let's try to use it.
+Set node_load1 at the search field, and push "Execute" button - it displays the overall load chart.
+
+Let's continue to play around this chart.
+connect to the docker-machine via ssh and generate the load to the machine:
+```shell script
+docker-machine ssh docker-host
+yes > /dev/null
+```
+
+Now chart displays a leap.
+
+push the results to the dockerhub:
+
+```shell script
+docker login
+docker push $USER_NAME/ui
+docker push $USER_NAME/comment
+docker push $USER_NAME/post
+docker push $USER_NAME/prometheus
+```
+
+As result, there are four builds available:
+- https://hub.docker.com/repository/docker/dmitrykorlas/ui
+- https://hub.docker.com/repository/docker/dmitrykorlas/comment
+- https://hub.docker.com/repository/docker/dmitrykorlas/post
+- https://hub.docker.com/repository/docker/dmitrykorlas/prometheus
+
+
+# Helpful links
+- https://github.com/prometheus/node_exporter
+- https://github.com/prometheus/blackbox_exporter
+- https://github.com/google/cloudprober
