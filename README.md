@@ -700,6 +700,25 @@ docker-compose -f docker-compose.yml up -d
 docker-compose -f docker-compose-monitoring.yml up -d
 ```
 
+cAdvisor is a service for containers monitoring. It will be used in this homework.
+See changes, the new service 'cadvisor' added to docker-compose-monitoring.yml. Also, the new scrape config added to prometheus.yml.
+
+re-build the prometheus image
+```shell script
+# run in monitoring/prometheus folder
+export USER_NAME=dmitrykorlas
+docker build -t $USER_NAME/prometheus .
+```
+
+then, start services using commands above.
+
+add firewall rules to allow 8080 port
+```shell script
+gcloud compute firewall-rules create cadvisor-default --allow tcp:8080
+```
+
+visit http://<docker-machinehost-ip>:8080 to see cAdvisor control panel
+
 
 ## Helpful links:
 - https://github.com/google/cadvisor
