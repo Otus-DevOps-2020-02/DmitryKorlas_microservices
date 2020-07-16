@@ -625,3 +625,65 @@ Check chart **ui_health_post** - it's down.
 
 Now, let's bring it to live using `docker-compose start post` command
 Check the carts again - it shows the service is UP.
+
+## Exporters
+Is a some kind of agent to collect te metrics. When we unable to use prometheus inside the app, exporters can be suitable.
+It transforms the status of application into the prometheus compatible metrics format.
+
+Let's add new service in *docker-compose.yml* for node_exporter named `node-exporter`.
+
+add new job into the prometheus config file at *monitoring/prometheus/prometheus.yml*
+```shell script
+- job_name: 'node'
+  static_configs:
+    - targets:
+      - 'node-exporter:9100'
+```
+
+then, build the new image:
+```shell script
+cd monitoring/prometheus
+docker build -t $USER_NAME/prometheus .
+```
+
+let's recreate our services
+```shell script
+docker-compose down
+docker-compose -f docker-compose.yml up -d
+```
+
+Check targets on prometheus control panel - new endpoint named 'node' appears
+
+Let's try to use it.
+Set node_load1 at the search field, and push "Execute" button - it displays the overall load chart.
+
+Let's continue to play around this chart.
+connect to the docker-machine via ssh and generate the load to the machine:
+```shell script
+docker-machine ssh docker-host
+yes > /dev/null
+```
+
+Now chart displays a leap.
+
+push the results to the dockerhub:
+
+```shell script
+docker login
+docker push $USER_NAME/ui
+docker push $USER_NAME/comment
+docker push $USER_NAME/post
+docker push $USER_NAME/prometheus
+```
+
+As result, there are four builds available:
+- https://hub.docker.com/repository/docker/dmitrykorlas/ui
+- https://hub.docker.com/repository/docker/dmitrykorlas/comment
+- https://hub.docker.com/repository/docker/dmitrykorlas/post
+- https://hub.docker.com/repository/docker/dmitrykorlas/prometheus
+
+
+# Helpful links
+- https://github.com/prometheus/node_exporter
+- https://github.com/prometheus/blackbox_exporter
+- https://github.com/google/cloudprober
