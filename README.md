@@ -700,6 +700,7 @@ docker-compose -f docker-compose.yml up -d
 docker-compose -f docker-compose-monitoring.yml up -d
 ```
 
+## cAdvisor
 cAdvisor is a service for containers monitoring. It will be used in this homework.
 See changes, the new service 'cadvisor' added to docker-compose-monitoring.yml. Also, the new scrape config added to prometheus.yml.
 
@@ -718,7 +719,35 @@ gcloud compute firewall-rules create cadvisor-default --allow tcp:8080
 ```
 
 visit http://<docker-machinehost-ip>:8080 to see cAdvisor control panel
+visit http://<docker-machinehost-ip>:8080/metrics to see metrics collected for prometheus
+
+Let's check that prometheus understand this metrics:
+visit http://<docker-machinehost-ip>:9090 to see prometheus control panel
+
+set `container_cpu_system_seconds_total` and see the chart
+
+## Grafana
+
+Grafana is a visualisation tool.
+See grafana config in `docker-compose-monitoring.yml`
+
+Run grafana:
+```shell script
+docker-compose -f docker-compose-monitoring.yml up -d grafana
+```
+
+visit http://<docker-machinehost-ip>:3000 to see grafana control panel
+
+Now, let's add data source:
+- Name: Prometheus Server
+- Type: Prometheus
+- URL: http://prometheus:9090
+- Access: Proxy
+
+then, press 'Add' button.
 
 
 ## Helpful links:
 - https://github.com/google/cadvisor
+- https://grafana.com/dashboards
+- https://grafana.com/grafana/dashboards/893
