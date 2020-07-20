@@ -768,7 +768,11 @@ rate(ui_request_count{http_status=~"[45].*"}[1m])
 95 percentile response time:
 histogram_quantile(0.95, sum(rate(ui_request_response_time_bucket[5m])) by (le))
 
+Rate of new posts
+rate(post_count[1h])
 
+Rate of new comments
+rate(comment_count[1h])
 
 ## Helpful links:
 - https://github.com/google/cadvisor
