@@ -757,6 +757,19 @@ Set "Prometheus Server" at "Options > Prometheus" field.
 
 Now, the new dashboard appears.
 
+## Add charts to the dashboard
+
+UI HTTP requests:
+rate(ui_request_count{http_status=~"[123].*"}[1m])
+
+HTTP errors:
+rate(ui_request_count{http_status=~"[45].*"}[1m])
+
+95 percentile response time:
+histogram_quantile(0.95, sum(rate(ui_request_response_time_bucket[5m])) by (le))
+
+
+
 ## Helpful links:
 - https://github.com/google/cadvisor
 - https://grafana.com/dashboards
