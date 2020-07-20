@@ -746,6 +746,16 @@ Now, let's add data source:
 
 then, press 'Add' button.
 
+## Add grafana dashboard
+
+visit https://grafana.com/grafana/dashboards/893 and press "download JSON" link.
+save it as *monitoring/grafana/dashboards/DockerMonitoring.json*
+
+then, in grafana control panel, press '+' icon at the left and import.
+Use received JSON file.
+Set "Prometheus Server" at "Options > Prometheus" field.
+
+Now, the new dashboard appears.
 
 ## Helpful links:
 - https://github.com/google/cadvisor
