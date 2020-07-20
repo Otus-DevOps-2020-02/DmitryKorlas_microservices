@@ -774,6 +774,39 @@ rate(post_count[1h])
 Rate of new comments
 rate(comment_count[1h])
 
+## Alertmanager
+
+It requires slack web-hooks integration:
+- open slack group on the web http://devops-team-otus.slack.com
+- navigate to "Apps" on the left side menu
+- search for "Incoming web hooks"
+- click "Add to Slack"
+- choose the channel (#dmitry_korlas)
+- choose Add incoming web-hooks integration
+- it should display web-hook URL like this one *https://hooks.slack.com/services/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*
+- add it to add into `monitoring/alertmanager/config.yml`
+
+build alertmanager container and add it to the `docker-compose-monitoring.yml` (don't forget to allow 9093 port if it's blocked on GCP)
+```shell script
+# in monitoring/alertmanager
+docker build -t $USER_NAME/alertmanager .
+```
+
+see `monitoring/prometheus/alerts.yml` to overview the basic alert example
+
+See section alerts on prometheus control panel: http://IP:9090/alerts.
+Also, see the separate alert control panel: http://IP:9093.
+
+Let's try how it works:
+stop post container:
+```shell script
+docker-compose stop post
+```
+
+wait for 1m, you have to receive new Slack notification. Also, check alerts in prometheus and http://IP:9093.
+It displays that alert is FIRED.
+After post service is UP, alert will be displayed as inactive
+
 ## Helpful links:
 - https://github.com/google/cadvisor
 - https://grafana.com/dashboards
