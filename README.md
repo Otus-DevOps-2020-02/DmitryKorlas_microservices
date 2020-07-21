@@ -687,3 +687,127 @@ As result, there are four builds available:
 - https://github.com/prometheus/node_exporter
 - https://github.com/prometheus/blackbox_exporter
 - https://github.com/google/cloudprober
+
+
+# Homework: Lecture 21. Monitoring visualisation.
+
+Prepare docker-host using docker-machine - see details in previous homework.
+
+Monitoring services moved to separate *docker-compose-monitoring.yml*
+Now, app and monitoring runs separately.
+```shell script
+docker-compose -f docker-compose.yml up -d
+docker-compose -f docker-compose-monitoring.yml up -d
+```
+
+## cAdvisor
+cAdvisor is a service for containers monitoring. It will be used in this homework.
+See changes, the new service 'cadvisor' added to docker-compose-monitoring.yml. Also, the new scrape config added to prometheus.yml.
+
+re-build the prometheus image
+```shell script
+# run in monitoring/prometheus folder
+export USER_NAME=dmitrykorlas
+docker build -t $USER_NAME/prometheus .
+```
+
+then, start services using commands above.
+
+add firewall rules to allow 8080 port
+```shell script
+gcloud compute firewall-rules create cadvisor-default --allow tcp:8080
+```
+
+visit http://<docker-machinehost-ip>:8080 to see cAdvisor control panel
+visit http://<docker-machinehost-ip>:8080/metrics to see metrics collected for prometheus
+
+Let's check that prometheus understand this metrics:
+visit http://<docker-machinehost-ip>:9090 to see prometheus control panel
+
+set `container_cpu_system_seconds_total` and see the chart
+
+## Grafana
+
+Grafana is a visualisation tool.
+See grafana config in `docker-compose-monitoring.yml`
+
+Run grafana:
+```shell script
+docker-compose -f docker-compose-monitoring.yml up -d grafana
+```
+
+visit http://<docker-machinehost-ip>:3000 to see grafana control panel
+
+Now, let's add data source:
+- Name: Prometheus Server
+- Type: Prometheus
+- URL: http://prometheus:9090
+- Access: Proxy
+
+then, press 'Add' button.
+
+## Add grafana dashboard
+
+visit https://grafana.com/grafana/dashboards/893 and press "download JSON" link.
+save it as *monitoring/grafana/dashboards/DockerMonitoring.json*
+
+then, in grafana control panel, press '+' icon at the left and import.
+Use received JSON file.
+Set "Prometheus Server" at "Options > Prometheus" field.
+
+Now, the new dashboard appears.
+
+## Add charts to the dashboard
+
+UI HTTP requests:
+rate(ui_request_count{http_status=~"[123].*"}[1m])
+
+HTTP errors:
+rate(ui_request_count{http_status=~"[45].*"}[1m])
+
+95 percentile response time:
+histogram_quantile(0.95, sum(rate(ui_request_response_time_bucket[5m])) by (le))
+
+Rate of new posts
+rate(post_count[1h])
+
+Rate of new comments
+rate(comment_count[1h])
+
+## Alertmanager
+
+It requires slack web-hooks integration:
+- open slack group on the web http://devops-team-otus.slack.com
+- navigate to "Apps" on the left side menu
+- search for "Incoming web hooks"
+- click "Add to Slack"
+- choose the channel (#dmitry_korlas)
+- choose Add incoming web-hooks integration
+- it should display web-hook URL like this one *https://hooks.slack.com/services/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*
+- add it to add into `monitoring/alertmanager/config.yml`
+
+build alertmanager container and add it to the `docker-compose-monitoring.yml` (don't forget to allow 9093 port if it's blocked on GCP)
+```shell script
+# in monitoring/alertmanager
+docker build -t $USER_NAME/alertmanager .
+```
+
+see `monitoring/prometheus/alerts.yml` to overview the basic alert example
+
+See section alerts on prometheus control panel: http://IP:9090/alerts.
+Also, see the separate alert control panel: http://IP:9093.
+
+Let's try how it works:
+stop post container:
+```shell script
+docker-compose stop post
+```
+
+wait for 1m, you have to receive new Slack notification. Also, check alerts in prometheus and http://IP:9093.
+It displays that alert is FIRED.
+After post service is UP, alert will be displayed as inactive
+
+## Helpful links:
+- https://github.com/google/cadvisor
+- https://grafana.com/dashboards
+- https://grafana.com/grafana/dashboards/893
