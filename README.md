@@ -811,3 +811,57 @@ After post service is UP, alert will be displayed as inactive
 - https://github.com/google/cadvisor
 - https://grafana.com/dashboards
 - https://grafana.com/grafana/dashboards/893
+
+
+# Homework: Lecture 23. Logging.
+
+Create new machine
+```shell script
+export GOOGLE_PROJECT=docker-279121
+docker-machine create --driver google \
+    --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+    --google-machine-type n1-standard-1 \
+    --google-open-port 5601/tcp \
+    --google-open-port 9292/tcp \
+    --google-open-port 9411/tcp \
+    logging
+
+# switch docker to host machine
+eval $(docker-machine env logging)
+
+# find IP address
+docker-machine ip logging
+```
+
+re-create builds due to tag has switched to 'logging'
+```shell script
+# in /src/ui
+bash docker_build.sh && docker push $USER_NAME/ui
+
+# in /src/post-py
+bash docker_build.sh && docker push $USER_NAME/post
+
+# in /src/comment
+bash docker_build.sh && docker push $USER_NAME/comment
+```
+
+new logging services added into `docker-compose-logging.yml`
+new container added to logging/fluentd/Dockerfile
+
+**Fluentd is a tool for send, aggregate and convert (transform) log messages.**
+
+build fluentd
+```shell script
+export USER_NAME=dmitrykorlas
+docker build -t $USER_NAME/fluentd .
+```
+
+set version to 'logging' in `.env` (due to it was changed during build), then start services
+`docker-compose -f docker-compose.yml up -d`
+
+## see logs
+run `docker-compose logs -f post` to see post logs in console
+
+## Helpful links
+- https://docs.docker.com/config/containers/logging/configure/
+- https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html
