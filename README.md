@@ -870,6 +870,19 @@ Elasticsearch service has run with env variable `- discovery.type=single-node` d
 > [1]: the default discovery settings are unsuitable for production use; at least one of [discovery.seed_hosts, discovery.seed_providers, cluster.initial_master_nodes] must be configured
 >
 
+## Filter logs
+Add section `<filter service.post>` in logging/fluentd/fluentd.conf
+
+rebuild fluentd image
+```shell script
+docker build -t $USER_NAME/fluentd .
+```
+
+start fluentd
+```
+docker-compose -f docker-compose-logging.yml up -d fluentd
+```
+
 ## Helpful links
 - https://docs.docker.com/config/containers/logging/configure/
 - https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html
