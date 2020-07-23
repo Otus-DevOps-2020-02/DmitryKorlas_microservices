@@ -862,6 +862,16 @@ set version to 'logging' in `.env` (due to it was changed during build), then st
 ## see logs
 run `docker-compose logs -f post` to see post logs in console
 
+During Kibana installation, this link has been helpful
+https://github.com/elastic/elasticsearch-docker/issues/92#issuecomment-318086404
+Elasticsearch service has run with env variable `- discovery.type=single-node` due to following errors:
+>
+> [1] bootstrap checks failed
+> [1]: the default discovery settings are unsuitable for production use; at least one of [discovery.seed_hosts, discovery.seed_providers, cluster.initial_master_nodes] must be configured
+>
+
 ## Helpful links
 - https://docs.docker.com/config/containers/logging/configure/
 - https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html
+- https://docs.docker.com/engine/admin/logging/fluentd/
+-

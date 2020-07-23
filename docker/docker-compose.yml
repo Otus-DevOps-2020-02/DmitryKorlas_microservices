@@ -13,6 +13,11 @@ services:
   post:
     # build: ../src/post-py
     image: ${USERNAME}/post:${POST_IMAGE_VERSION}
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: service.post
     networks:
       - back_net
       - front_net
