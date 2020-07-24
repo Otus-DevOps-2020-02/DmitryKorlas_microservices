@@ -46,7 +46,7 @@ services:
       - "${UI_PORT}:9292"
     networks:
       - front_net
-      -
+
 ## use to have uncotigorized logs
 #  ui:
 #    image: artemmkin/ui
