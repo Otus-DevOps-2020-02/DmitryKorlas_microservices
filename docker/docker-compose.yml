@@ -20,8 +20,6 @@ services:
       options:
         fluentd-address: localhost:24224
         tag: service.post
-    depends_on:
-      - fluentd
     networks:
       - back_net
       - front_net
