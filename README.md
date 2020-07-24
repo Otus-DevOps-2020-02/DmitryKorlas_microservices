@@ -883,6 +883,24 @@ start fluentd
 docker-compose -f docker-compose-logging.yml up -d fluentd
 ```
 
+To see logs in Kibana, naviage to <DOCKER_MACHINE_IP>:5601
+
+## Zipkin
+**Zipkin is a tool for request tracing in a distributed systems**
+
+See changes on docker-compose.yml docker-compose-logging.yml
+all app services receives `- ZIPKIN_ENABLED=${ZIPKIN_ENABLED}` variable
+and zipkin service has been added into `docker-compose-logging.yml`
+
+Let's re-create services
+```shell script
+docker-compose -f docker-compose-logging.yml -f docker-compose.yml down
+docker-compose -f docker-compose-logging.yml -f docker-compose.yml up -d
+```
+
+Explore zipkin control panel on <DOCKER_MACHINE_IP>:9411
+To see the data, we have to reload our service frontpage (to submit requests)
+
 ## Helpful links
 - https://docs.docker.com/config/containers/logging/configure/
 - https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html

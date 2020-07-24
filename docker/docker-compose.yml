@@ -13,11 +13,15 @@ services:
   post:
     # build: ../src/post-py
     image: ${USERNAME}/post:${POST_IMAGE_VERSION}
+    environment:
+      - ZIPKIN_ENABLED=${ZIPKIN_ENABLED}
     logging:
       driver: "fluentd"
       options:
         fluentd-address: localhost:24224
         tag: service.post
+    depends_on:
+      - fluentd
     networks:
       - back_net
       - front_net
@@ -25,6 +29,8 @@ services:
   comment:
     # build: ../src/comment
     image: ${USERNAME}/comment:${COMMENT_IMAGE_VERSION}
+    environment:
+      - ZIPKIN_ENABLED=${ZIPKIN_ENABLED}
     networks:
       - back_net
       - front_net
@@ -34,11 +40,14 @@ services:
     # uncomment to use custom name of container
     # container_name: app_ui
     image: ${USERNAME}/ui:${UI_IMAGE_VERSION}
+    environment:
+      - ZIPKIN_ENABLED=${ZIPKIN_ENABLED}
     ports:
       - "${UI_PORT}:9292"
     networks:
       - front_net
-
+      -
+## use to have uncotigorized logs
 #  ui:
 #    image: artemmkin/ui
 #    environment:
