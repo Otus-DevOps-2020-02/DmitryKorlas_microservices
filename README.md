@@ -901,6 +901,11 @@ docker-compose -f docker-compose-logging.yml -f docker-compose.yml up -d
 Explore zipkin control panel on <DOCKER_MACHINE_IP>:9411
 To see the data, we have to reload our service frontpage (to submit requests)
 
+## Task with *
+> Using https://github.com/Artemmkin/bugged-code, find why the 'post' button produce delay of page loading.
+>
+method find_post contains `time.sleep(3)` - this is why it's processed too long
+
 ## Helpful links
 - https://docs.docker.com/config/containers/logging/configure/
 - https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html
