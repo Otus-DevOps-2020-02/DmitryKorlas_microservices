@@ -910,4 +910,12 @@ method find_post contains `time.sleep(3)` - this is why it's processed too long
 - https://docs.docker.com/config/containers/logging/configure/
 - https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html
 - https://docs.docker.com/engine/admin/logging/fluentd/
--
+
+
+# Homework: Lecture 25. Kubernetes introduction.
+
+
+
+
+## Helpful links
+- https://github.com/kelseyhightower/kubernetes-the-hard-way
