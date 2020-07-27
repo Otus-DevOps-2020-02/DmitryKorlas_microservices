@@ -811,3 +811,103 @@ After post service is UP, alert will be displayed as inactive
 - https://github.com/google/cadvisor
 - https://grafana.com/dashboards
 - https://grafana.com/grafana/dashboards/893
+
+
+# Homework: Lecture 23. Logging.
+
+Create new machine
+```shell script
+export GOOGLE_PROJECT=docker-279121
+docker-machine create --driver google \
+    --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
+    --google-machine-type n1-standard-1 \
+    --google-open-port 5601/tcp \
+    --google-open-port 9292/tcp \
+    --google-open-port 9411/tcp \
+    logging
+
+# switch docker to host machine
+eval $(docker-machine env logging)
+
+# find IP address
+docker-machine ip logging
+```
+
+re-create builds due to tag has switched to 'logging'
+```shell script
+# in /src/ui
+bash docker_build.sh && docker push $USER_NAME/ui
+
+# in /src/post-py
+bash docker_build.sh && docker push $USER_NAME/post
+
+# in /src/comment
+bash docker_build.sh && docker push $USER_NAME/comment
+```
+
+new logging services added into `docker-compose-logging.yml`
+new container added to logging/fluentd/Dockerfile
+
+**Fluentd is a tool for send, aggregate and convert (transform) log messages.**
+
+build fluentd
+```shell script
+export USER_NAME=dmitrykorlas
+docker build -t $USER_NAME/fluentd .
+```
+
+set version to 'logging' in `.env` (due to it was changed during build), then start services
+`docker-compose -f docker-compose.yml up -d`
+
+## see logs
+run `docker-compose logs -f post` to see post logs in console
+
+During Kibana installation, this link has been helpful
+https://github.com/elastic/elasticsearch-docker/issues/92#issuecomment-318086404
+Elasticsearch service has run with env variable `- discovery.type=single-node` due to following errors:
+>
+> [1] bootstrap checks failed
+> [1]: the default discovery settings are unsuitable for production use; at least one of [discovery.seed_hosts, discovery.seed_providers, cluster.initial_master_nodes] must be configured
+>
+
+## Filter logs
+Add section `<filter service.post>` in logging/fluentd/fluentd.conf
+
+rebuild fluentd image
+```shell script
+docker build -t $USER_NAME/fluentd .
+```
+
+start fluentd
+```
+docker-compose -f docker-compose-logging.yml up -d fluentd
+```
+
+To see logs in Kibana, naviage to <DOCKER_MACHINE_IP>:5601
+
+## Zipkin
+**Zipkin is a tool for request tracing in a distributed systems**
+
+See changes on docker-compose.yml docker-compose-logging.yml
+all app services receives `- ZIPKIN_ENABLED=${ZIPKIN_ENABLED}` variable
+and zipkin service has been added into `docker-compose-logging.yml`
+
+Let's re-create services
+```shell script
+docker-compose -f docker-compose-logging.yml -f docker-compose.yml down
+docker-compose -f docker-compose-logging.yml -f docker-compose.yml up -d
+```
+
+Explore zipkin control panel on <DOCKER_MACHINE_IP>:9411
+To see the data, we have to reload our service frontpage (to submit requests)
+
+## Task with *
+> Using https://github.com/Artemmkin/bugged-code, find why the 'post' button produce delay of page loading.
+>
+method find_post contains `time.sleep(3)` - this is why it's processed too long
+
+## Helpful links
+- https://docs.docker.com/config/containers/logging/configure/
+- https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html
+- https://docs.docker.com/engine/admin/logging/fluentd/
+-
