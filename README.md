@@ -914,6 +914,9 @@ method find_post contains `time.sleep(3)` - this is why it's processed too long
 
 # Homework: Lecture 25. Kubernetes introduction.
 
+This homework is step-by-step following the guide, described at: https://github.com/kelseyhightower/kubernetes-the-hard-way
+
+To run the same command in multiple terminal sessions (which useful) we can use this hint:
 **tmux sync panels mode:**
 type `ctrl+b`, then `shift+:`
 type `set synchronize-panes on` or `set synchronize-panes off` to sync or un-sync the panels.
