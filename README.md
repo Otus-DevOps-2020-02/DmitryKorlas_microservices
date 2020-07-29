@@ -910,4 +910,49 @@ method find_post contains `time.sleep(3)` - this is why it's processed too long
 - https://docs.docker.com/config/containers/logging/configure/
 - https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html
 - https://docs.docker.com/engine/admin/logging/fluentd/
--
+
+
+# Homework: Lecture 25. Kubernetes introduction.
+
+This homework is step-by-step following the guide, described at: https://github.com/kelseyhightower/kubernetes-the-hard-way
+
+To run the same command in multiple terminal sessions (which useful) we can use this hint:
+**tmux sync panels mode:**
+type `ctrl+b`, then `shift+:`
+type `set synchronize-panes on` or `set synchronize-panes off` to sync or un-sync the panels.
+
+
+Kubernetes components are stateless and store cluster state in [etcd](https://github.com/etcd-io/etcd).
+
+Few commands
+```shell script
+kubectl get componentstatuses
+
+kubectl get nodes
+
+kubectl apply -f https://storage.googleapis.com/kubernetes-the-hard-way/coredns-1.7.0.yaml
+
+kubectl get pods -l k8s-app=kube-dns -n kube-system
+
+kubectl run busybox --image=busybox:1.28 --command -- sleep 3600
+kubectl get pods -l run=busybox
+
+# Retrieve the full name of the busybox pod:
+POD_NAME=$(kubectl get pods -l run=busybox -o jsonpath="{.items[0].metadata.name}")
+
+#Execute a DNS lookup for the kubernetes service inside the busybox pod:
+kubectl exec -ti $POD_NAME -- nslookup kubernetes
+
+
+kubectl create deployment nginx --image=nginx
+
+kubectl logs $POD_NAME
+
+kubectl exec -ti $POD_NAME -- nginx -v
+```
+
+
+## Helpful links
+- https://github.com/kelseyhightower/kubernetes-the-hard-way
+- https://kubernetes.io/docs/concepts/overview/components
+- https://kubernetes.io/docs/reference/kubectl/cheatsheet/
