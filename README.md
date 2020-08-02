@@ -956,3 +956,67 @@ kubectl exec -ti $POD_NAME -- nginx -v
 - https://github.com/kelseyhightower/kubernetes-the-hard-way
 - https://kubernetes.io/docs/concepts/overview/components
 - https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+
+# Homework: Lecture 27. Running Kubernetes cluster and application inside it. Model of security.
+
+- **kubectl** - main tool to work with kubernetes API
+- **~/.kube** stores a local info for kubectl
+- **minikube** - utilites for the local kubernetes running and management
+
+install kubectl:
+```shell script
+brew install kubectl
+brew install kubectl-cli
+kubectl version --client
+```
+
+install minikube:
+```shell script
+brew install minikube
+```
+
+create the cluster inside virtualbox:
+```shell script
+minikube start
+```
+
+```shell script
+# check nodes
+kubectl get nodes
+
+kubectl config current-context
+kubectl config get-contexts
+```
+
+Explore `~/.kube/config`, it contains info about context. Context is a combination of cluster+user+namespace.
+
+
+update ui-deplayments.yml, then run ui-component in minikube
+```shell script
+kubectl apply -f ui-deployment.yml
+kubectl get deployment
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+ui     3/3     3            3           64s
+```
+
+important that AVAILABLE coutner is 3 - this number we set in ui-deployment.yml
+
+Network adjustment:
+```shell script
+# find the pods of application using selector
+kubectl get pods --selector component=ui
+NAME                 READY   STATUS    RESTARTS   AGE
+ui-74f6f754b-b4zrw   1/1     Running   0          4m56s
+ui-74f6f754b-fn2ff   1/1     Running   0          4m56s
+ui-74f6f754b-nsq7k   1/1     Running   0          4m56s
+
+# setup port forwarding from local-port:pod:port
+kubectl port-forward ui-74f6f754b-b4zrw 8080:9292
+```
+
+check http://localhost:8080 - it should display UI
+
+
+## Helpful links
+- https://kubernetes.io/docs/tasks/tools/install-kubectl/
+- https://kubernetes.io/docs/tasks/tools/install-minikube/
