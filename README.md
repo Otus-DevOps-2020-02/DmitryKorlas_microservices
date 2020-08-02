@@ -999,7 +999,7 @@ NAME   READY   UP-TO-DATE   AVAILABLE   AGE
 ui     3/3     3            3           64s
 ```
 
-important that AVAILABLE coutner is 3 - this number we set in ui-deployment.yml
+important that AVAILABLE counter is 3 - this number we set in ui-deployment.yml
 
 Network adjustment:
 ```shell script
@@ -1118,7 +1118,36 @@ kubectl apply -f mongodb-service.yml
 kubectl describe service mongodb | grep Endpoints
 ```
 
+## how to run:
+```shell script
+cd kubernetes
+kubectl apply -f reddit
+
+# check deployment status
+kubectl get deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+comment            3/3     3            3           21s
+mongo-deployment   1/1     1            1           21s
+post-deployment    3/3     3            3           21s
+ui                 3/3     3            3           20s
+
+# find ui and set port-forwarding
+kubectl get pods --selector component=ui
+NAME                 READY   STATUS    RESTARTS   AGE
+ui-74f6f754b-2qnnf   1/1     Running   0          82s
+ui-74f6f754b-rrwd2   1/1     Running   0          82s
+ui-74f6f754b-zcmb8   1/1     Running   0          82s
+kubectl port-forward ui-74f6f754b-2qnnf 9292:9292
+
+# visit http://localhost:9292 - you have to be able to create posts and comments
+```
+
+## how to cleanup
+```shell script
+kubectl delete pods,services,deployments --all
+```
 
 ## Helpful links
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - https://kubernetes.io/docs/tasks/tools/install-minikube/
+- https://kubernetes.io/docs/reference/kubectl/cheatsheet/
