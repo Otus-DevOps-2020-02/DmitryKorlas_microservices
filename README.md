@@ -990,7 +990,7 @@ kubectl config get-contexts
 
 Explore `~/.kube/config`, it contains info about context. Context is a combination of cluster+user+namespace.
 
-### configure UI
+### configure UI deployment
 update ui-deplayments.yml, then run ui-component in minikube
 ```shell script
 kubectl apply -f ui-deployment.yml
@@ -1016,10 +1016,11 @@ kubectl port-forward ui-74f6f754b-b4zrw 8080:9292
 
 check http://localhost:8080 - it should display UI
 
-### configure comment
-update comment-deplayments.yml, then run comment-component in minikube
+### configure comment deployment
+update comment-deployment.yml, then run comment-component in minikube
 ```shell script
 kubectl apply -f comment-deployment.yml
+
 kubectl get deployment
 NAME      READY   UP-TO-DATE   AVAILABLE   AGE
 comment   3/3     3            3           4m33s
@@ -1037,6 +1038,36 @@ kubectl port-forward comment-585cb7f976-dmqjt 8080:9292
 visit http://localhost:8080/healthcheck, it output
 ```json
 {"status":0,"dependent_services":{"commentdb":0},"version":"0.0.3"}
+```
+
+### configure post deployment
+
+update post-deployment.yml, then run post-component in minikube
+```shell script
+kubectl apply -f post-deployment.yml
+
+kubectl get deployment
+NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+comment           3/3     3            3           14m
+post-deployment   3/3     3            3           118s
+ui                3/3     3            3           8h
+
+# find the pods
+kubectl get pods --selector component=post
+NAME                               READY   STATUS    RESTARTS   AGE
+post-deployment-79c5598dc6-nhjdq   1/1     Running   0          2m40s
+post-deployment-79c5598dc6-rc9xg   1/1     Running   0          2m40s
+post-deployment-79c5598dc6-twz4r   1/1     Running   0          2m40s
+
+kubectl port-forward post-deployment-79c5598dc6-nhjdq 8080:5000
+Forwarding from 127.0.0.1:8080 -> 5000
+Forwarding from [::1]:8080 -> 5000
+```
+
+visit the page
+```shell script
+curl http://localhost:8080/healthcheck
+{"status": 0, "dependent_services": {"postdb": 0}, "version": "0.0.2"}
 ```
 
 ## Helpful links
