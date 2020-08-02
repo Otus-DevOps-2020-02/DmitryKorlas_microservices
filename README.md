@@ -990,7 +990,7 @@ kubectl config get-contexts
 
 Explore `~/.kube/config`, it contains info about context. Context is a combination of cluster+user+namespace.
 
-
+### configure UI
 update ui-deplayments.yml, then run ui-component in minikube
 ```shell script
 kubectl apply -f ui-deployment.yml
@@ -1016,6 +1016,28 @@ kubectl port-forward ui-74f6f754b-b4zrw 8080:9292
 
 check http://localhost:8080 - it should display UI
 
+### configure comment
+update comment-deplayments.yml, then run comment-component in minikube
+```shell script
+kubectl apply -f comment-deployment.yml
+kubectl get deployment
+NAME      READY   UP-TO-DATE   AVAILABLE   AGE
+comment   3/3     3            3           4m33s
+ui        3/3     3            3           7h56m
+
+# find the pods
+kubectl get pods --selector component=comment
+NAME                       READY   STATUS    RESTARTS   AGE
+comment-585cb7f976-dmqjt   1/1     Running   0          5m3s
+comment-585cb7f976-fz4s7   1/1     Running   0          5m3s
+comment-585cb7f976-x2mk6   1/1     Running   0          5m3s
+
+kubectl port-forward comment-585cb7f976-dmqjt 8080:9292
+```
+visit http://localhost:8080/healthcheck, it output
+```json
+{"status":0,"dependent_services":{"commentdb":0},"version":"0.0.3"}
+```
 
 ## Helpful links
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/
