@@ -1118,6 +1118,113 @@ kubectl apply -f mongodb-service.yml
 kubectl describe service mongodb | grep Endpoints
 ```
 
+### setup ui-service
+**NodePort** opens a port from the range 30000-32767 and route the traffic to the **targetPort** (similar to **expose** in Docker)
+ie **NodePort** is for accessing the cluster from the outside. **port** is for accessing the service inside the cluster.
+
+Let's see in terminal:
+```shell script
+minikube service list
+|-------------|------------|--------------|-----|
+|  NAMESPACE  |    NAME    | TARGET PORT  | URL |
+|-------------|------------|--------------|-----|
+| default     | comment    | No node port |
+| default     | comment-db | No node port |
+| default     | kubernetes | No node port |
+| default     | post       | No node port |
+| default     | post-db    | No node port |
+| default     | ui         |         9292 |     |
+| kube-system | kube-dns   | No node port |
+|-------------|------------|--------------|-----|
+```
+
+Another ability - running services. Try to run `minikube service ui` in terminal - it will open a browser with the UI service:
+```shell script
+minikube service ui
+|-----------|------|-------------|-------------------------|
+| NAMESPACE | NAME | TARGET PORT |           URL           |
+|-----------|------|-------------|-------------------------|
+| default   | ui   |        9292 | http://172.17.0.3:32092 |
+|-----------|------|-------------|-------------------------|
+🏃  Starting tunnel for service ui.
+|-----------|------|-------------|------------------------|
+| NAMESPACE | NAME | TARGET PORT |          URL           |
+|-----------|------|-------------|------------------------|
+| default   | ui   |             | http://127.0.0.1:58241 |
+|-----------|------|-------------|------------------------|
+🎉  Opening service default/ui in default browser...
+❗  Because you are using a Docker driver on darwin, the terminal needs to be open to run it.
+
+# you will see http://127.0.0.1:58241 with the reddit UI in browser window.
+```
+
+## Addons
+
+minikube has few addons out of box. Let's observe it:
+```shell script
+minikube addons list
+|-----------------------------|----------|--------------|
+|         ADDON NAME          | PROFILE  |    STATUS    |
+|-----------------------------|----------|--------------|
+| ambassador                  | minikube | disabled     |
+| dashboard                   | minikube | disabled     |
+| default-storageclass        | minikube | enabled ✅   |
+| efk                         | minikube | disabled     |
+| freshpod                    | minikube | disabled     |
+| gvisor                      | minikube | disabled     |
+| helm-tiller                 | minikube | disabled     |
+| ingress                     | minikube | disabled     |
+| ingress-dns                 | minikube | disabled     |
+| istio                       | minikube | disabled     |
+| istio-provisioner           | minikube | disabled     |
+| kubevirt                    | minikube | disabled     |
+| logviewer                   | minikube | disabled     |
+| metallb                     | minikube | disabled     |
+| metrics-server              | minikube | disabled     |
+| nvidia-driver-installer     | minikube | disabled     |
+| nvidia-gpu-device-plugin    | minikube | disabled     |
+| olm                         | minikube | disabled     |
+| pod-security-policy         | minikube | disabled     |
+| registry                    | minikube | disabled     |
+| registry-aliases            | minikube | disabled     |
+| registry-creds              | minikube | disabled     |
+| storage-provisioner         | minikube | enabled ✅   |
+| storage-provisioner-gluster | minikube | disabled     |
+|-----------------------------|----------|--------------|
+```
+
+## Namespaces
+
+Kubernetes has 3 namespaces by default:
+- **default** - for all objects without specially predefined namespace (all we did in this homework)
+- **kube-system** - for internal kubernetes object's
+- **kube-public** - for objects which should be accessible from any point of cluster
+
+create new namespace dev-namespace.yml, then run:
+```shell script
+kubectl apply -f dev-namespace.yml
+
+kubectl apply -n dev -f .
+```
+in case of port conflict, just comment **nodePort** parameter in **ui-service.yml**.
+Then, start ui service in dev namespace
+```shell script
+minikube service ui -n dev
+|-----------|------|-------------|-------------------------|
+| NAMESPACE | NAME | TARGET PORT |           URL           |
+|-----------|------|-------------|-------------------------|
+| dev       | ui   |        9292 | http://172.17.0.3:30974 |
+|-----------|------|-------------|-------------------------|
+🏃  Starting tunnel for service ui.
+|-----------|------|-------------|------------------------|
+| NAMESPACE | NAME | TARGET PORT |          URL           |
+|-----------|------|-------------|------------------------|
+| dev       | ui   |             | http://127.0.0.1:58732 |
+|-----------|------|-------------|------------------------|
+🎉  Opening service dev/ui in default browser...
+❗  Because you are using a Docker driver on darwin, the terminal needs to be open to run it.
+```
+
 ## how to run:
 ```shell script
 cd kubernetes
@@ -1140,6 +1247,9 @@ ui-74f6f754b-zcmb8   1/1     Running   0          82s
 kubectl port-forward ui-74f6f754b-2qnnf 9292:9292
 
 # visit http://localhost:9292 - you have to be able to create posts and comments
+
+# run in dev namespace
+minikube service ui -n dev
 ```
 
 ## how to cleanup
