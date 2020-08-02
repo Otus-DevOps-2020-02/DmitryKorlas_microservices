@@ -22,3 +22,9 @@ spec:
       containers:
         - image: mongo:3.2
           name: mongo
+          volumeMounts: # mount point in container (not in POD)
+            - name: mongo-persistent-storage
+              mountPath: /data/db
+      volumes: # volumes associated with this POD
+        - name: mongo-persistent-storage
+          emptyDir: {}
