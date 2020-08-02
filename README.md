@@ -1251,6 +1251,14 @@ kubectl port-forward ui-74f6f754b-2qnnf 9292:9292
 # run in dev namespace
 minikube service ui -n dev
 ```
+use env variables in ui-deployment, then re-run:
+```shell script
+kubectl apply -f ui-deployment.yml -n dev
+minikube service ui -n dev
+```
+notice `dev` at the web-page header.
+
+
 
 ## how to cleanup
 ```shell script
@@ -1261,3 +1269,4 @@ kubectl delete pods,services,deployments --all
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - https://kubernetes.io/docs/tasks/tools/install-minikube/
 - https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+- https://www.terraform.io/docs/providers/google/r/container_cluster.html
