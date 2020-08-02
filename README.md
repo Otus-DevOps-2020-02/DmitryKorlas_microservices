@@ -1074,6 +1074,8 @@ Then, modify mongo-deployment.yml. It configured to use the data outside of cont
 
 ## Link services
 
+Service in terms of kubernetes - is an abstraction to determine the set of POD's (entrypoint's) and the way for accessing it.
+
 add comment-service.yml
 then deploy
 ```shell script
@@ -1103,6 +1105,19 @@ nslookup: can't resolve '(null)': Name does not resolve
 Name:      comment
 Address 1: 10.111.88.51 comment.default.svc.cluster.local
 ```
+
+repeat this procedure for **post** and **mongodb**
+```shell script
+kubectl apply -f post-service.yml
+
+kubectl describe service post | grep Endpoints
+Endpoints:         172.18.0.10:5000,172.18.0.11:5000,172.18.0.9:5000
+
+
+kubectl apply -f mongodb-service.yml
+kubectl describe service mongodb | grep Endpoints
+```
+
 
 ## Helpful links
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/

@@ -22,3 +22,6 @@ spec:
       containers:
         - image: dmitrykorlas/comment
           name: comment
+          env:
+            - name: COMMENT_DATABASE_HOST
+              value: comment-db
