@@ -1070,6 +1070,40 @@ curl http://localhost:8080/healthcheck
 {"status": 0, "dependent_services": {"postdb": 0}, "version": "0.0.2"}
 ```
 
+Then, modify mongo-deployment.yml. It configured to use the data outside of container.
+
+## Link services
+
+add comment-service.yml
+then deploy
+```shell script
+kubectl apply -f comment-service.yml
+
+# endpoints have to be found by label's
+kubectl describe service comment | grep Endpoints
+Endpoints:         172.18.0.6:9292,172.18.0.7:9292,172.18.0.8:9292
+```
+
+Let's check DNS will resolve the service host correctly:
+```shell script
+kubectl exec -ti post-deployment-79c5598dc6-nhjdq nslookup comment
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+nslookup: can't resolve '(null)': Name does not resolve
+
+Name:      comment
+Address 1: 10.111.88.51 comment.default.svc.cluster.local
+
+```
+
+or, as it reports, using the latest (updated) command format:
+```shell script
+kubectl exec post-deployment-79c5598dc6-nhjdq -- nslookup comment
+nslookup: can't resolve '(null)': Name does not resolve
+
+Name:      comment
+Address 1: 10.111.88.51 comment.default.svc.cluster.local
+```
+
 ## Helpful links
 - https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - https://kubernetes.io/docs/tasks/tools/install-minikube/
