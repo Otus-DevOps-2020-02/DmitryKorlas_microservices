@@ -1301,6 +1301,8 @@ kubectl delete pods,services,deployments --all
 
 # Homework: Lecture 26. Ingress-controllers and services in Kubernetes.
 
+## DNS
+
 **kube-dns** is a plugin to provide DNS server for kubernetes. Kubernetes does not have it out of box.
 
 Let's see services from the previous homework
@@ -1361,7 +1363,47 @@ ui     LoadBalancer   10.8.10.161   130.211.225.255   80:32092/TCP   23m
 
 Now, the app is available on http://130.211.225.255
 
+By the way, this LoadBalancer have few limitations:
+- can't be managed using HTTP URI (L7 balancer). L7 balancer's is useful for web apps.
+- used only cloud-based balancers (GCP, AWS etc)
+- not too flexible
 
+## Ingress
+
+**Ingress** can be used as a more flexible tool for traffic management (In comparison to **LoadBalancer**).
+
+**Ingress** is just a set of rule's. It's managed by **Ingress-controller**.
+
+**Ingress contains of 2 main parts:**
+- app which manages the balancer configuration using k8s API
+- balancer (nginx. traefik, haproxy) which actually manipulates the traffic
+
+**Ingress used to be:**
+- make a single entry-point for the app
+- balance the traffic
+- terminate's the SSL
+- names based virtual hosting
+
+Create `ui-ingress.yml`, then apply it:
+```shell script
+kubectl apply -f ui-ingress.yml -n dev
+```
+
+Let's review, new rules has been created: https://console.cloud.google.com/net-services/loadbalancing/loadBalancers/list
+It creates a new service with NodeType, let's review in terminal:
+```shell script
+kubectl get ingress -n dev
+NAME   HOSTS   ADDRESS          PORTS   AGE
+ui     *       34.120.202.107   80      6m36s
+```
+
+visit http://34.120.202.107:80 to see our app
+
+So, now our configuration is redundant due to we have 2 balancer's. Let's remove one from ui-service.yml`.
+Then, apply configuration:
+```shell script
+
+```
 
 ## Helpful links
 - https://console.cloud.google.com/networking/routes/
