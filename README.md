@@ -1258,7 +1258,33 @@ minikube service ui -n dev
 ```
 notice `dev` at the web-page header.
 
+## Run in GCE
+We need to add cluster in GCE, then add a firewall rule to allow ports **TCP:30000-32767**
+the cluster size = 2, 1.7 GB memory.
+All VM's created by kubernetes is also available in UI gcloud compute VM instances. It accessible trough ssh.
+```shell script
+# copied from GCE console: Kubernetes Engine > clusters > cluster list item > button "Connect"
+gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project docker-279121
 
+# create dev namespace
+kubectl apply -f ./kubernetes/reddit/dev-namespace.yml
+
+# create rest of deployment
+kubectl apply -f ./kubernetes/reddit/ -n dev
+
+# find external-ip address
+kubectl get nodes -o wide
+NAME                                       STATUS   ROLES    AGE   VERSION          INTERNAL-IP   EXTERNAL-IP      OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
+gke-cluster-1-default-pool-886d59d1-0mgh   Ready    <none>   13m   v1.15.12-gke.2   10.128.0.3    34.66.70.249     Container-Optimized OS from Google   4.19.112+        docker://19.3.1
+gke-cluster-1-default-pool-886d59d1-h9k4   Ready    <none>   13m   v1.15.12-gke.2   10.128.0.4    35.193.124.163   Container-Optimized OS from Google   4.19.112+        docker://19.3.1
+
+# find port
+kubectl describe service ui -n dev | grep NodePort
+Type:                     NodePort
+NodePort:                 <unset>  32092/TCP
+```
+
+Visit http://34.66.70.249:32092
 
 ## how to cleanup
 ```shell script
@@ -1270,3 +1296,4 @@ kubectl delete pods,services,deployments --all
 - https://kubernetes.io/docs/tasks/tools/install-minikube/
 - https://kubernetes.io/docs/reference/kubectl/cheatsheet/
 - https://www.terraform.io/docs/providers/google/r/container_cluster.html
+- https://cloud.google.com/kubernetes-engine/
