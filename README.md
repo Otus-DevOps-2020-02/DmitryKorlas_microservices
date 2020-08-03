@@ -1402,8 +1402,12 @@ visit http://34.120.202.107:80 to see our app
 So, now our configuration is redundant due to we have 2 balancer's. Let's remove one from ui-service.yml`.
 Then, apply configuration:
 ```shell script
-
+kubectl apply -f ui-ingress.yml -n dev
 ```
+
+Then, re-configure it to be a regular web proxy
+
+
 
 ## Helpful links
 - https://console.cloud.google.com/networking/routes/
