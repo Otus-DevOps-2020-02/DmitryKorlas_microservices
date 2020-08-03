@@ -1431,5 +1431,27 @@ then check:
 kubectl describe secret ui-ingress -n dev
 ```
 
+## TLS termination
+Let's allow only HTTPS traffic. Edit `ui-ingress.yml`
+
+```shell script
+kubectl apply -f ui-ingress.yml -n dev
+```
+
+Visit the page https://console.cloud.google.com/net-services/loadbalancing/loadBalancers/list to see http is not available anymore.
+
+In case it still there, let's remove it manually:
+```shell script
+kubectl delete ingress ui -n dev
+kubectl apply -f ui-ingress.yml -n dev
+
+kubectl get ingress -n dev
+NAME   HOSTS   ADDRESS          PORTS     AGE
+ui     *       34.120.202.107   80, 443   28m
+```
+
+It will take some time. Then visit https://34.120.202.107
+
+
 ## Helpful links
 - https://console.cloud.google.com/networking/routes/
