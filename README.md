@@ -1407,7 +1407,29 @@ kubectl apply -f ui-ingress.yml -n dev
 
 Then, re-configure it to be a regular web proxy
 
+## Secret
 
+Let's protect the service using TLS:
+```shell script
+kubectl get ingress -n dev
+NAME   HOSTS   ADDRESS          PORTS   AGE
+ui     *       34.120.202.107   80      30m
+```
+
+create a certificate:
+```shell script
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=34.120.202.107"
+```
+
+load it into kubernetes:
+```shell script
+kubectl create secret tls ui-ingress --key tls.key --cert tls.crt -n dev
+```
+
+then check:
+```shell script
+kubectl describe secret ui-ingress -n dev
+```
 
 ## Helpful links
 - https://console.cloud.google.com/networking/routes/
