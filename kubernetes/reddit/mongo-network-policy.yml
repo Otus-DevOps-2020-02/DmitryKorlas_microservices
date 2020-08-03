@@ -1,0 +1,30 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-db-traffic
+  labels:
+    app: reddit
+spec:
+  # select targets
+  podSelector:
+    matchLabels:
+      app: reddit
+      component: mongo
+
+  # black list, disallow incoming traffic, outgoing still allowed
+  policyTypes:
+  - Ingress
+
+  # white list, allow all incoming traffic from POD's with the 'comment' label
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: reddit
+          component: comment
+  - from:
+      - podSelector:
+          matchLabels:
+            app: reddit
+            component: post
