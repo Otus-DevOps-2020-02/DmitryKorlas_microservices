@@ -1,13 +1,13 @@
 ---
-apiVersion: apps/v1
+apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: mongo-deployment
+  name: mongo
   labels:
     app: reddit
     component: mongo
-    comment-db: "true"
     post-db: "true"
+    comment-db: "true"
 spec:
   replicas: 1
   selector:
@@ -30,5 +30,5 @@ spec:
             - name: mongo-persistent-storage
               mountPath: /data/db
       volumes: # volumes associated with this POD
-        - name: mongo-persistent-storage
+        - name: mongo-persistent-storage # declare the volume
           emptyDir: {}
