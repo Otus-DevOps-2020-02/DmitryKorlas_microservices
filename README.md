@@ -1297,3 +1297,71 @@ kubectl delete pods,services,deployments --all
 - https://kubernetes.io/docs/reference/kubectl/cheatsheet/
 - https://www.terraform.io/docs/providers/google/r/container_cluster.html
 - https://cloud.google.com/kubernetes-engine/
+
+
+# Homework: Lecture 26. Ingress-controllers and services in Kubernetes.
+
+**kube-dns** is a plugin to provide DNS server for kubernetes. Kubernetes does not have it out of box.
+
+Let's see services from the previous homework
+
+```shell script
+kubectl get services -n dev
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
+comment      ClusterIP   10.8.7.158    <none>        9292/TCP         115s
+comment-db   ClusterIP   10.8.4.241    <none>        27017/TCP        116s
+mongodb      ClusterIP   10.8.11.96    <none>        27017/TCP        114s
+post         ClusterIP   10.8.14.194   <none>        5000/TCP         112s
+post-db      ClusterIP   10.8.3.76     <none>        27017/TCP        113s
+ui           NodePort    10.8.10.161   <none>        9292:32092/TCP   111s
+```
+
+Scale to 0 service which make ensure that `dns-kube` POD's is enough.
+```shell script
+kubectl scale deployment --replicas 0 -n kube-system kube-dnsautoscaler
+```
+
+Then, scale to 0 `dns-kube`:
+```shell script
+ kubectl scale deployment --replicas 0 -n kube-system kube-dns
+```
+
+Now, let's take a look that services became unavailable by name:
+```shell script
+kubectl exec -ti -n dev comment-74469d6454-cp962 ping comment
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+ping: unknown host comment
+command terminated with exit code 2
+```
+
+bring it to life:
+```shell script
+kubectl scale deployment --replicas 1 -n kube-system kube-dns-autoscaler
+```
+
+LoadBalancer:
+Let's change `ui-service.yml` from **NodeType** to **LoadBalancer**:
+```shell script
+kubectl apply -f ui-service.yml -n dev
+```
+
+then, check it:
+```shell script
+kubectl get service -n dev --selector component=ui
+NAME   TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+ui     LoadBalancer   10.8.10.161   <pending>     80:32092/TCP   22m
+```
+
+it requires some time to configure by GKE. Retry after few minutes:
+```shell script
+kubectl get service -n dev --selector component=ui
+NAME   TYPE           CLUSTER-IP    EXTERNAL-IP       PORT(S)        AGE
+ui     LoadBalancer   10.8.10.161   130.211.225.255   80:32092/TCP   23m
+```
+
+Now, the app is available on http://130.211.225.255
+
+
+
+## Helpful links
+- https://console.cloud.google.com/networking/routes/
