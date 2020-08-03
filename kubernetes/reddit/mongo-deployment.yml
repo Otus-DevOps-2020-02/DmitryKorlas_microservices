@@ -3,17 +3,32 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mongo-deployment
+  labels:
+    app: reddit
+    component: mongo
+    comment-db: "true"
+    post-db: "true"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mongo
+      app: reddit
+      component: mongo
   template:
     metadata:
       name: mongo
       labels:
-        app: mongo
+        app: reddit
+        component: mongo
+        comment-db: "true"
+        post-db: "true"
     spec:
       containers:
         - image: mongo:3.2
           name: mongo
+          volumeMounts: # mount point in container (not in POD)
+            - name: mongo-persistent-storage
+              mountPath: /data/db
+      volumes: # volumes associated with this POD
+        - name: mongo-persistent-storage
+          emptyDir: {}

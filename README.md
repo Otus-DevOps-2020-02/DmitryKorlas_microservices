@@ -956,3 +956,344 @@ kubectl exec -ti $POD_NAME -- nginx -v
 - https://github.com/kelseyhightower/kubernetes-the-hard-way
 - https://kubernetes.io/docs/concepts/overview/components
 - https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+
+# Homework: Lecture 27. Running Kubernetes cluster and application inside it. Model of security.
+
+- **kubectl** - main tool to work with kubernetes API
+- **~/.kube** stores a local info for kubectl
+- **minikube** - utilites for the local kubernetes running and management
+
+install kubectl:
+```shell script
+brew install kubectl
+brew install kubectl-cli
+kubectl version --client
+```
+
+install minikube:
+```shell script
+brew install minikube
+```
+
+create the cluster inside virtualbox:
+```shell script
+minikube start
+```
+
+```shell script
+# check nodes
+kubectl get nodes
+
+kubectl config current-context
+kubectl config get-contexts
+```
+
+Explore `~/.kube/config`, it contains info about context. Context is a combination of cluster+user+namespace.
+
+### configure UI deployment
+update ui-deplayments.yml, then run ui-component in minikube
+```shell script
+kubectl apply -f ui-deployment.yml
+kubectl get deployment
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+ui     3/3     3            3           64s
+```
+
+important that AVAILABLE counter is 3 - this number we set in ui-deployment.yml
+
+Network adjustment:
+```shell script
+# find the pods of application using selector
+kubectl get pods --selector component=ui
+NAME                 READY   STATUS    RESTARTS   AGE
+ui-74f6f754b-b4zrw   1/1     Running   0          4m56s
+ui-74f6f754b-fn2ff   1/1     Running   0          4m56s
+ui-74f6f754b-nsq7k   1/1     Running   0          4m56s
+
+# setup port forwarding from local-port:pod:port
+kubectl port-forward ui-74f6f754b-b4zrw 8080:9292
+```
+
+check http://localhost:8080 - it should display UI
+
+### configure comment deployment
+update comment-deployment.yml, then run comment-component in minikube
+```shell script
+kubectl apply -f comment-deployment.yml
+
+kubectl get deployment
+NAME      READY   UP-TO-DATE   AVAILABLE   AGE
+comment   3/3     3            3           4m33s
+ui        3/3     3            3           7h56m
+
+# find the pods
+kubectl get pods --selector component=comment
+NAME                       READY   STATUS    RESTARTS   AGE
+comment-585cb7f976-dmqjt   1/1     Running   0          5m3s
+comment-585cb7f976-fz4s7   1/1     Running   0          5m3s
+comment-585cb7f976-x2mk6   1/1     Running   0          5m3s
+
+kubectl port-forward comment-585cb7f976-dmqjt 8080:9292
+```
+visit http://localhost:8080/healthcheck, it output
+```json
+{"status":0,"dependent_services":{"commentdb":0},"version":"0.0.3"}
+```
+
+### configure post deployment
+
+update post-deployment.yml, then run post-component in minikube
+```shell script
+kubectl apply -f post-deployment.yml
+
+kubectl get deployment
+NAME              READY   UP-TO-DATE   AVAILABLE   AGE
+comment           3/3     3            3           14m
+post-deployment   3/3     3            3           118s
+ui                3/3     3            3           8h
+
+# find the pods
+kubectl get pods --selector component=post
+NAME                               READY   STATUS    RESTARTS   AGE
+post-deployment-79c5598dc6-nhjdq   1/1     Running   0          2m40s
+post-deployment-79c5598dc6-rc9xg   1/1     Running   0          2m40s
+post-deployment-79c5598dc6-twz4r   1/1     Running   0          2m40s
+
+kubectl port-forward post-deployment-79c5598dc6-nhjdq 8080:5000
+Forwarding from 127.0.0.1:8080 -> 5000
+Forwarding from [::1]:8080 -> 5000
+```
+
+visit the page
+```shell script
+curl http://localhost:8080/healthcheck
+{"status": 0, "dependent_services": {"postdb": 0}, "version": "0.0.2"}
+```
+
+Then, modify mongo-deployment.yml. It configured to use the data outside of container.
+
+## Link services
+
+Service in terms of kubernetes - is an abstraction to determine the set of POD's (entrypoint's) and the way for accessing it.
+
+add comment-service.yml
+then deploy
+```shell script
+kubectl apply -f comment-service.yml
+
+# endpoints have to be found by label's
+kubectl describe service comment | grep Endpoints
+Endpoints:         172.18.0.6:9292,172.18.0.7:9292,172.18.0.8:9292
+```
+
+Let's check DNS will resolve the service host correctly:
+```shell script
+kubectl exec -ti post-deployment-79c5598dc6-nhjdq nslookup comment
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+nslookup: can't resolve '(null)': Name does not resolve
+
+Name:      comment
+Address 1: 10.111.88.51 comment.default.svc.cluster.local
+
+```
+
+or, as it reports, using the latest (updated) command format:
+```shell script
+kubectl exec post-deployment-79c5598dc6-nhjdq -- nslookup comment
+nslookup: can't resolve '(null)': Name does not resolve
+
+Name:      comment
+Address 1: 10.111.88.51 comment.default.svc.cluster.local
+```
+
+repeat this procedure for **post** and **mongodb**
+```shell script
+kubectl apply -f post-service.yml
+
+kubectl describe service post | grep Endpoints
+Endpoints:         172.18.0.10:5000,172.18.0.11:5000,172.18.0.9:5000
+
+
+kubectl apply -f mongodb-service.yml
+kubectl describe service mongodb | grep Endpoints
+```
+
+### setup ui-service
+**NodePort** opens a port from the range 30000-32767 and route the traffic to the **targetPort** (similar to **expose** in Docker)
+ie **NodePort** is for accessing the cluster from the outside. **port** is for accessing the service inside the cluster.
+
+Let's see in terminal:
+```shell script
+minikube service list
+|-------------|------------|--------------|-----|
+|  NAMESPACE  |    NAME    | TARGET PORT  | URL |
+|-------------|------------|--------------|-----|
+| default     | comment    | No node port |
+| default     | comment-db | No node port |
+| default     | kubernetes | No node port |
+| default     | post       | No node port |
+| default     | post-db    | No node port |
+| default     | ui         |         9292 |     |
+| kube-system | kube-dns   | No node port |
+|-------------|------------|--------------|-----|
+```
+
+Another ability - running services. Try to run `minikube service ui` in terminal - it will open a browser with the UI service:
+```shell script
+minikube service ui
+|-----------|------|-------------|-------------------------|
+| NAMESPACE | NAME | TARGET PORT |           URL           |
+|-----------|------|-------------|-------------------------|
+| default   | ui   |        9292 | http://172.17.0.3:32092 |
+|-----------|------|-------------|-------------------------|
+🏃  Starting tunnel for service ui.
+|-----------|------|-------------|------------------------|
+| NAMESPACE | NAME | TARGET PORT |          URL           |
+|-----------|------|-------------|------------------------|
+| default   | ui   |             | http://127.0.0.1:58241 |
+|-----------|------|-------------|------------------------|
+🎉  Opening service default/ui in default browser...
+❗  Because you are using a Docker driver on darwin, the terminal needs to be open to run it.
+
+# you will see http://127.0.0.1:58241 with the reddit UI in browser window.
+```
+
+## Addons
+
+minikube has few addons out of box. Let's observe it:
+```shell script
+minikube addons list
+|-----------------------------|----------|--------------|
+|         ADDON NAME          | PROFILE  |    STATUS    |
+|-----------------------------|----------|--------------|
+| ambassador                  | minikube | disabled     |
+| dashboard                   | minikube | disabled     |
+| default-storageclass        | minikube | enabled ✅   |
+| efk                         | minikube | disabled     |
+| freshpod                    | minikube | disabled     |
+| gvisor                      | minikube | disabled     |
+| helm-tiller                 | minikube | disabled     |
+| ingress                     | minikube | disabled     |
+| ingress-dns                 | minikube | disabled     |
+| istio                       | minikube | disabled     |
+| istio-provisioner           | minikube | disabled     |
+| kubevirt                    | minikube | disabled     |
+| logviewer                   | minikube | disabled     |
+| metallb                     | minikube | disabled     |
+| metrics-server              | minikube | disabled     |
+| nvidia-driver-installer     | minikube | disabled     |
+| nvidia-gpu-device-plugin    | minikube | disabled     |
+| olm                         | minikube | disabled     |
+| pod-security-policy         | minikube | disabled     |
+| registry                    | minikube | disabled     |
+| registry-aliases            | minikube | disabled     |
+| registry-creds              | minikube | disabled     |
+| storage-provisioner         | minikube | enabled ✅   |
+| storage-provisioner-gluster | minikube | disabled     |
+|-----------------------------|----------|--------------|
+```
+
+## Namespaces
+
+Kubernetes has 3 namespaces by default:
+- **default** - for all objects without specially predefined namespace (all we did in this homework)
+- **kube-system** - for internal kubernetes object's
+- **kube-public** - for objects which should be accessible from any point of cluster
+
+create new namespace dev-namespace.yml, then run:
+```shell script
+kubectl apply -f dev-namespace.yml
+
+kubectl apply -n dev -f .
+```
+in case of port conflict, just comment **nodePort** parameter in **ui-service.yml**.
+Then, start ui service in dev namespace
+```shell script
+minikube service ui -n dev
+|-----------|------|-------------|-------------------------|
+| NAMESPACE | NAME | TARGET PORT |           URL           |
+|-----------|------|-------------|-------------------------|
+| dev       | ui   |        9292 | http://172.17.0.3:30974 |
+|-----------|------|-------------|-------------------------|
+🏃  Starting tunnel for service ui.
+|-----------|------|-------------|------------------------|
+| NAMESPACE | NAME | TARGET PORT |          URL           |
+|-----------|------|-------------|------------------------|
+| dev       | ui   |             | http://127.0.0.1:58732 |
+|-----------|------|-------------|------------------------|
+🎉  Opening service dev/ui in default browser...
+❗  Because you are using a Docker driver on darwin, the terminal needs to be open to run it.
+```
+
+## how to run:
+```shell script
+cd kubernetes
+kubectl apply -f reddit
+
+# check deployment status
+kubectl get deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+comment            3/3     3            3           21s
+mongo-deployment   1/1     1            1           21s
+post-deployment    3/3     3            3           21s
+ui                 3/3     3            3           20s
+
+# find ui and set port-forwarding
+kubectl get pods --selector component=ui
+NAME                 READY   STATUS    RESTARTS   AGE
+ui-74f6f754b-2qnnf   1/1     Running   0          82s
+ui-74f6f754b-rrwd2   1/1     Running   0          82s
+ui-74f6f754b-zcmb8   1/1     Running   0          82s
+kubectl port-forward ui-74f6f754b-2qnnf 9292:9292
+
+# visit http://localhost:9292 - you have to be able to create posts and comments
+
+# run in dev namespace
+minikube service ui -n dev
+```
+use env variables in ui-deployment, then re-run:
+```shell script
+kubectl apply -f ui-deployment.yml -n dev
+minikube service ui -n dev
+```
+notice `dev` at the web-page header.
+
+## Run in GCE
+We need to add cluster in GCE, then add a firewall rule to allow ports **TCP:30000-32767**
+the cluster size = 2, 1.7 GB memory.
+All VM's created by kubernetes is also available in UI gcloud compute VM instances. It accessible trough ssh.
+```shell script
+# copied from GCE console: Kubernetes Engine > clusters > cluster list item > button "Connect"
+gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project docker-279121
+
+# create dev namespace
+kubectl apply -f ./kubernetes/reddit/dev-namespace.yml
+
+# create rest of deployment
+kubectl apply -f ./kubernetes/reddit/ -n dev
+
+# find external-ip address
+kubectl get nodes -o wide
+NAME                                       STATUS   ROLES    AGE   VERSION          INTERNAL-IP   EXTERNAL-IP      OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
+gke-cluster-1-default-pool-886d59d1-0mgh   Ready    <none>   13m   v1.15.12-gke.2   10.128.0.3    34.66.70.249     Container-Optimized OS from Google   4.19.112+        docker://19.3.1
+gke-cluster-1-default-pool-886d59d1-h9k4   Ready    <none>   13m   v1.15.12-gke.2   10.128.0.4    35.193.124.163   Container-Optimized OS from Google   4.19.112+        docker://19.3.1
+
+# find port
+kubectl describe service ui -n dev | grep NodePort
+Type:                     NodePort
+NodePort:                 <unset>  32092/TCP
+```
+
+Visit http://34.66.70.249:32092
+
+## how to cleanup
+```shell script
+kubectl delete pods,services,deployments --all
+```
+
+## Helpful links
+- https://kubernetes.io/docs/tasks/tools/install-kubectl/
+- https://kubernetes.io/docs/tasks/tools/install-minikube/
+- https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+- https://www.terraform.io/docs/providers/google/r/container_cluster.html
+- https://cloud.google.com/kubernetes-engine/
