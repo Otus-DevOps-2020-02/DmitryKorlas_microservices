@@ -1452,6 +1452,16 @@ ui     *       34.120.202.107   80, 443   28m
 
 It will take some time. Then visit https://34.120.202.107
 
+## Network policy
+
+## Storage
+We added a dynamic storage via PersistentVolumeClaim.
+```shell script
+kubectl get persistentvolume -n dev
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                   STORAGECLASS   REASON   AGE
+pvc-501d8a21-c77b-4026-88e5-9ef4d05db5a7   10Gi       RWO            Delete           Bound    dev/mongo-pvc-dynamic   fast                    3m37s
+pvc-6f492a06-a6f3-42e2-bbee-a2aa5fe10dad   15Gi       RWO            Delete           Bound    dev/mongo-pvc           standard                9m30s
+```
 
 ## Helpful links
 - https://console.cloud.google.com/networking/routes/
