@@ -1297,3 +1297,171 @@ kubectl delete pods,services,deployments --all
 - https://kubernetes.io/docs/reference/kubectl/cheatsheet/
 - https://www.terraform.io/docs/providers/google/r/container_cluster.html
 - https://cloud.google.com/kubernetes-engine/
+
+
+# Homework: Lecture 26. Ingress-controllers and services in Kubernetes.
+
+## DNS
+
+**kube-dns** is a plugin to provide DNS server for kubernetes. Kubernetes does not have it out of box.
+
+Let's see services from the previous homework
+
+```shell script
+kubectl get services -n dev
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
+comment      ClusterIP   10.8.7.158    <none>        9292/TCP         115s
+comment-db   ClusterIP   10.8.4.241    <none>        27017/TCP        116s
+mongodb      ClusterIP   10.8.11.96    <none>        27017/TCP        114s
+post         ClusterIP   10.8.14.194   <none>        5000/TCP         112s
+post-db      ClusterIP   10.8.3.76     <none>        27017/TCP        113s
+ui           NodePort    10.8.10.161   <none>        9292:32092/TCP   111s
+```
+
+Scale to 0 service which make ensure that `dns-kube` POD's is enough.
+```shell script
+kubectl scale deployment --replicas 0 -n kube-system kube-dnsautoscaler
+```
+
+Then, scale to 0 `dns-kube`:
+```shell script
+ kubectl scale deployment --replicas 0 -n kube-system kube-dns
+```
+
+Now, let's take a look that services became unavailable by name:
+```shell script
+kubectl exec -ti -n dev comment-74469d6454-cp962 ping comment
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+ping: unknown host comment
+command terminated with exit code 2
+```
+
+bring it to life:
+```shell script
+kubectl scale deployment --replicas 1 -n kube-system kube-dns-autoscaler
+```
+
+LoadBalancer:
+Let's change `ui-service.yml` from **NodeType** to **LoadBalancer**:
+```shell script
+kubectl apply -f ui-service.yml -n dev
+```
+
+then, check it:
+```shell script
+kubectl get service -n dev --selector component=ui
+NAME   TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+ui     LoadBalancer   10.8.10.161   <pending>     80:32092/TCP   22m
+```
+
+it requires some time to configure by GKE. Retry after few minutes:
+```shell script
+kubectl get service -n dev --selector component=ui
+NAME   TYPE           CLUSTER-IP    EXTERNAL-IP       PORT(S)        AGE
+ui     LoadBalancer   10.8.10.161   130.211.225.255   80:32092/TCP   23m
+```
+
+Now, the app is available on http://130.211.225.255
+
+By the way, this LoadBalancer have few limitations:
+- can't be managed using HTTP URI (L7 balancer). L7 balancer's is useful for web apps.
+- used only cloud-based balancers (GCP, AWS etc)
+- not too flexible
+
+## Ingress
+
+**Ingress** can be used as a more flexible tool for traffic management (In comparison to **LoadBalancer**).
+
+**Ingress** is just a set of rule's. It's managed by **Ingress-controller**.
+
+**Ingress contains of 2 main parts:**
+- app which manages the balancer configuration using k8s API
+- balancer (nginx. traefik, haproxy) which actually manipulates the traffic
+
+**Ingress used to be:**
+- make a single entry-point for the app
+- balance the traffic
+- terminate's the SSL
+- names based virtual hosting
+
+Create `ui-ingress.yml`, then apply it:
+```shell script
+kubectl apply -f ui-ingress.yml -n dev
+```
+
+Let's review, new rules has been created: https://console.cloud.google.com/net-services/loadbalancing/loadBalancers/list
+It creates a new service with NodeType, let's review in terminal:
+```shell script
+kubectl get ingress -n dev
+NAME   HOSTS   ADDRESS          PORTS   AGE
+ui     *       34.120.202.107   80      6m36s
+```
+
+visit http://34.120.202.107:80 to see our app
+
+So, now our configuration is redundant due to we have 2 balancer's. Let's remove one from ui-service.yml`.
+Then, apply configuration:
+```shell script
+kubectl apply -f ui-ingress.yml -n dev
+```
+
+Then, re-configure it to be a regular web proxy
+
+## Secret
+
+Let's protect the service using TLS:
+```shell script
+kubectl get ingress -n dev
+NAME   HOSTS   ADDRESS          PORTS   AGE
+ui     *       34.120.202.107   80      30m
+```
+
+create a certificate:
+```shell script
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=34.120.202.107"
+```
+
+load it into kubernetes:
+```shell script
+kubectl create secret tls ui-ingress --key tls.key --cert tls.crt -n dev
+```
+
+then check:
+```shell script
+kubectl describe secret ui-ingress -n dev
+```
+
+## TLS termination
+Let's allow only HTTPS traffic. Edit `ui-ingress.yml`
+
+```shell script
+kubectl apply -f ui-ingress.yml -n dev
+```
+
+Visit the page https://console.cloud.google.com/net-services/loadbalancing/loadBalancers/list to see http is not available anymore.
+
+In case it still there, let's remove it manually:
+```shell script
+kubectl delete ingress ui -n dev
+kubectl apply -f ui-ingress.yml -n dev
+
+kubectl get ingress -n dev
+NAME   HOSTS   ADDRESS          PORTS     AGE
+ui     *       34.120.202.107   80, 443   28m
+```
+
+It will take some time. Then visit https://34.120.202.107
+
+## Network policy
+
+## Storage
+We added a dynamic storage via PersistentVolumeClaim.
+```shell script
+kubectl get persistentvolume -n dev
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                   STORAGECLASS   REASON   AGE
+pvc-501d8a21-c77b-4026-88e5-9ef4d05db5a7   10Gi       RWO            Delete           Bound    dev/mongo-pvc-dynamic   fast                    3m37s
+pvc-6f492a06-a6f3-42e2-bbee-a2aa5fe10dad   15Gi       RWO            Delete           Bound    dev/mongo-pvc           standard                9m30s
+```
+
+## Helpful links
+- https://console.cloud.google.com/networking/routes/
