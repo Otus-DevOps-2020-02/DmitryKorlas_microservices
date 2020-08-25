@@ -1505,5 +1505,11 @@ helm upgrade test-ui-2 ui/
 helm upgrade test-ui-3 ui/
 ```
 
+create main `Chart.yaml` in *Charts/reddit/Chart.yaml*
+then, run the command below for loading dependencies - it produces an requrements.lock file.
+```shell script
+helm dep update
+```
+
 ## Helpful links
 - https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide
