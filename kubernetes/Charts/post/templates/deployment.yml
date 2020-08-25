@@ -2,26 +2,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: post-deployment
+  name: {{ .Release.Name }}-{{ .Chart.Name }}
   labels:
     app: reddit
     component: post
+    release: {{ .Release.Name }}
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: reddit
       component: post
+      release: {{ .Release.Name }}
   template:
     metadata:
       name: post
       labels:
         app: reddit
         component: post
+        release: {{ .Release.Name }}
     spec:
       containers:
-        - image: dmitrykorlas/post
+        - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           name: post
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+              name: post
+              protocol: TCP
           env:
             - name: POST_DATABASE_HOST
-              value: post-db
+              value: {{ .Values.databaseHost | default (printf "%s-mongodb" .Release.Name) }}

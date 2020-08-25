@@ -1504,3 +1504,6 @@ helm upgrade test-ui-1 ui/
 helm upgrade test-ui-2 ui/
 helm upgrade test-ui-3 ui/
 ```
+
+## Helpful links
+- https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide
