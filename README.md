@@ -1465,3 +1465,29 @@ pvc-6f492a06-a6f3-42e2-bbee-a2aa5fe10dad   15Gi       RWO            Delete     
 
 ## Helpful links
 - https://console.cloud.google.com/networking/routes/
+
+
+# Homework: Lecture 27. Kubernetes - helm
+
+Helm is a package manager for kubernetes.
+
+```shell script
+brew install kubernetes-helm
+```
+
+```shell script
+kubectl apply -f tiller.yml
+helm init --service-account tiller
+```
+
+Check tiller is up
+```shell script
+kubectl get pods -n kube-system --selector app=helm
+NAME                             READY   STATUS    RESTARTS   AGE
+tiller-deploy-8487d94bcf-4jhbs   0/1     Pending   0          19s
+```
+
+Install chart:
+```shell script
+helm install --name test-ui-1 ui/
+```
