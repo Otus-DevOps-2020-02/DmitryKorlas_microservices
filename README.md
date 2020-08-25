@@ -1511,5 +1511,16 @@ then, run the command below for loading dependencies - it produces an requrement
 helm dep update
 ```
 
+Configure DB
+```shell script
+helm search mongo
+```
+
+add mongodb section into requirements.yaml
+```shell script
+# run in dir 'Charts'
+helm install reddit --name reddit-test
+```
+
 ## Helpful links
 - https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide
