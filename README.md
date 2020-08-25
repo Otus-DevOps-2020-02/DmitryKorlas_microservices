@@ -1491,3 +1491,9 @@ Install chart:
 ```shell script
 helm install --name test-ui-1 ui/
 ```
+
+Setup few releases:
+```shell script
+helm install --name test-ui-2 ui/
+helm install --name test-ui-3 ui/
+```
