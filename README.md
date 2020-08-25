@@ -1497,3 +1497,10 @@ Setup few releases:
 helm install --name test-ui-2 ui/
 helm install --name test-ui-3 ui/
 ```
+
+after creating templates, let's upgrade the apps:
+```shell script
+helm upgrade test-ui-1 ui/
+helm upgrade test-ui-2 ui/
+helm upgrade test-ui-3 ui/
+```
