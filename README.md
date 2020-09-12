@@ -1522,5 +1522,9 @@ add mongodb section into requirements.yaml
 helm install reddit --name reddit-test
 ```
 
+```shell script
+helm dep update ./reddit
+helm upgrade
+```
 ## Helpful links
 - https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide

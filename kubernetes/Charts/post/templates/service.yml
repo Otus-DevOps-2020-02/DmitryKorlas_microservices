@@ -17,3 +17,4 @@ spec:
     app: reddit
     component: post
     release: {{ .Release.Name }}
+...
