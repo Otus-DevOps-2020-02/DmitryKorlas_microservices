@@ -1526,5 +1526,11 @@ helm install reddit --name reddit-test
 helm dep update ./reddit
 helm upgrade
 ```
+
+## Add Gitlab CI
+```shell script
+helm repo add gitlab https://charts.gitlab.io
+```
+
 ## Helpful links
 - https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide
