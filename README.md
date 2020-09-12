@@ -1530,7 +1530,32 @@ helm upgrade
 ## Add Gitlab CI
 ```shell script
 helm repo add gitlab https://charts.gitlab.io
+cd gitlab-omnibus
+helm install --name gitlab . -f values.yaml
 ```
+
+find nginx
+```shell script
+kubectl get service -n nginx-ingress nginx
+NAME    TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)                                   AGE
+nginx   LoadBalancer   10.8.13.182   34.70.183.73   80:30194/TCP,443:31181/TCP,22:32603/TCP   64s
+```
+
+modify */etc/hosts/*
+```shell script
+echo "34.70.183.73 gitlab-gitlab staging production" >> /etc/hosts
+```
+
+apply patch to fix nginx ingress roles and permissions:
+```shell script
+kubectl apply -f ../../gitlab-roles.yaml
+```
+
+check pods are running successfully:
+```shell script
+kubectl get pods --all-namespaces -w
+```
+
 
 ## Helpful links
 - https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide
