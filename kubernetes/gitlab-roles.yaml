@@ -45,6 +45,7 @@ rules:
       - ""
     resources:
       - pods
+      - secrets
       - configmaps
     verbs:
       - list
@@ -52,6 +53,7 @@ rules:
       - ""
     resources:
       - services
+      - secrets
       - configmaps
     verbs:
       - get
@@ -59,6 +61,7 @@ rules:
       - ""
     resources:
       - endpoints
+      - secrets
     verbs:
       - get
       - create
