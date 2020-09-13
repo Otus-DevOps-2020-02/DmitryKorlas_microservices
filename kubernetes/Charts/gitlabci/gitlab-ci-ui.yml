@@ -1,4 +1,3 @@
----
 image: alpine:latest
 
 stages:
@@ -10,17 +9,19 @@ stages:
 
 build:
   stage: build
-  only:
-    - branches
   image: docker:git
   services:
     - docker:18.09.7-dind
+  script:
+    - setup_docker
+    - build
   variables:
     DOCKER_DRIVER: overlay2
-    CI_REGISTRY: 'index.docker.io'
-    CI_APPLICATION_REPOSITORY: $CI_REGISTRY/$CI_PROJECT_PATH
     CI_APPLICATION_TAG: $CI_COMMIT_REF_SLUG
     CI_CONTAINER_NAME: ci_job_build_${CI_JOB_ID}
+    CI_REGISTRY: "index.docker.io"
+  only:
+    - branches
   before_script:
     - >
       if ! docker info &>/dev/null; then
@@ -33,14 +34,15 @@ build:
     - echo "Building Dockerfile-based application..."
     - echo `git show --format="%h" HEAD | head -1` > build_info.txt
     - echo `git rev-parse --abbrev-ref HEAD` >> build_info.txt
-    - docker build -t "$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG" .
+    - docker build -t "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:$CI_APPLICATION_TAG" .
     - >
       if [[ -n "$CI_REGISTRY_USER" ]]; then
         echo "Logging to GitLab Container Registry with CI credentials...for build"
         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
       fi
     - echo "Pushing to GitLab Container Registry..."
-    - docker push "$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG"
+    - echo "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:$CI_APPLICATION_TAG"
+    - docker push "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:$CI_APPLICATION_TAG"
 
 test:
   stage: test
@@ -54,9 +56,10 @@ release:
   image: docker
   services:
     - docker:18.09.7-dind
+  only:
+    - master
   variables:
     CI_REGISTRY: 'index.docker.io'
-    CI_APPLICATION_REPOSITORY: $CI_REGISTRY/$CI_PROJECT_PATH
     CI_APPLICATION_TAG: $CI_COMMIT_REF_SLUG
     CI_CONTAINER_NAME: ci_job_build_${CI_JOB_ID}
   before_script:
@@ -74,14 +77,12 @@ release:
         echo "Logging to GitLab Container Registry with CI credentials for release..."
         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
       fi
-    - docker pull "$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG"
-    - docker tag "$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG" "$CI_APPLICATION_REPOSITORY:$(cat VERSION)"
-    - docker push "$CI_APPLICATION_REPOSITORY:$(cat VERSION)"
+    - docker pull "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:$CI_APPLICATION_TAG"
+    - docker tag "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:$CI_APPLICATION_TAG" "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:$(cat VERSION)"
+    - docker push "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:$(cat VERSION)"
     # latest is neede for feature flags
-    - docker tag "$CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG" "$CI_APPLICATION_REPOSITORY:latest"
-    - docker push "$CI_APPLICATION_REPOSITORY:latest"
-  only:
-    - master
+    - docker tag "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:$CI_APPLICATION_TAG" "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:latest"
+    - docker push "$CI_REGISTRY/$CI_REGISTRY_USER/$CI_PROJECT_NAME:latest"
 
 review:
   stage: review
@@ -121,7 +122,7 @@ review:
     - kubectl describe namespace "$KUBE_NAMESPACE" || kubectl create namespace "$KUBE_NAMESPACE"
     # installing Tiller
     - echo "Checking Tiller..."
-    - helm init --upgrade
+    - helm init --force-upgrade
     - kubectl rollout status -n "$TILLER_NAMESPACE" -w "deployment/tiller-deploy"
     - >
       if ! helm version --debug; then
@@ -151,7 +152,6 @@ review:
         --version="$CI_PIPELINE_ID-$CI_JOB_ID" \
         "$name" \
         reddit-deploy/reddit/
-
 stop_review:
   stage: cleanup
   variables:
@@ -186,4 +186,3 @@ stop_review:
     - kubectl version --client
   script:
     - helm delete "$name" --purge
-...
