@@ -818,6 +818,10 @@ serverFiles:
             regex: reddit # только эндпоинты сервисов с метками “app=reddit”
           - action: labelmap # Отобразить все совпадения групп
             regex: __meta_kubernetes_service_label_(.+) # из regex в label’ы Prometheus
+          - source_labels: [ __meta_kubernetes_namespace ]
+            target_label: kubernetes_namespace
+          - source_labels: [ __meta_kubernetes_service_name ]
+            target_label: kubernetes_name
 
 networkPolicy:
   ## Enable creation of NetworkPolicy resources.
