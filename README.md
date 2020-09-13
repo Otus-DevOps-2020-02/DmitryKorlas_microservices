@@ -1603,5 +1603,18 @@ Let's enable "kubeStateMetrics" in custom_values.yml. Then, update release:
 helm upgrade prom . -f custom_values.yml --install
 ```
 
+
+upgrade services:
+```shell script
+helm upgrade reddit-test reddit --install
+helm upgrade production --namespace production ./reddit --install
+helm upgrade staging --namespace staging ./reddit --install
+```
+
+add reddit-endpoints job, then upgrade release:
+```
+helm upgrade prom . -f custom_values.yml --install
+```
+
 ## Helpful links
 - https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
