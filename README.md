@@ -1616,5 +1616,38 @@ add reddit-endpoints job, then upgrade release:
 helm upgrade prom . -f custom_values.yml --install
 ```
 
+Install grafana
+```shell script
+helm upgrade --install grafana stable/grafana --set "adminPassword=admin" \
+--set "service.type=NodePort" \
+--set "ingress.enabled=true" \
+--set "ingress.hosts={reddit-grafana}"
+```
+
+Visit http://reddit-grafana/
+admin/admin
+
+add prometheus datasource
+set server name as `prom-prometheus-server` in result of command:
+```
+kubectl get svc
+```
+
+import this dashboard https://grafana.com/grafana/dashboards/315 as most popular for k8s monitoring
+
+visit http://reddit-grafana/?editview=templating to add new variable
+
+name = namespace
+type = query
+label = env
+datasource = prometheus
+refresh = on dashboard load
+query = label_values(namespace)
+regex = /.+/
+multi values = checked
+include all option = checked
+
 ## Helpful links
 - https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+- https://grafana.com/grafana/dashboards/315
+- https://akomljen.com/get-kubernetes-logs-with-efk-stack-in-5-minutes/
