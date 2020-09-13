@@ -1559,3 +1559,34 @@ kubectl get pods --all-namespaces -w
 
 ## Helpful links
 - https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide
+
+
+# Homework: Lecture 28. Kubernetes. Monitoring and logging.
+
+Install nginx
+```shell script
+helm install stable/nginx-ingress --name nginx
+```
+
+find it:
+```shell script
+kubectl get svc
+NAME                                  TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)                      AGE
+kubernetes                            ClusterIP      10.8.0.1      <none>         443/TCP                      20h
+nginx-nginx-ingress-controller        LoadBalancer   10.8.15.221   34.70.183.73   80:31839/TCP,443:30761/TCP   5m47s
+nginx-nginx-ingress-default-backend   ClusterIP      10.8.4.28     <none>         80/TCP                       5m47s
+reddit-test-comment                   ClusterIP      10.8.0.133    <none>         9292/TCP                     20h
+reddit-test-mongodb                   ClusterIP      10.8.1.150    <none>         27017/TCP                    20h
+reddit-test-post                      ClusterIP      10.8.8.86     <none>         5000/TCP                     20h
+reddit-test-ui                        NodePort       10.8.4.131    <none>         9292:30199/TCP               20h
+```
+
+edit /etc/hosts
+```shell script
+34.70.183.73 reddit reddit-prometheus reddit-grafana reddit-non-prod production redditkibana staging prod
+```
+
+Install Prometheus
+```shell script
+cd kubernetes/Charts/ && helm fetch --untar stable/prometheus
+```
