@@ -1590,3 +1590,15 @@ Install Prometheus
 ```shell script
 cd kubernetes/Charts/ && helm fetch --untar stable/prometheus
 ```
+
+add *kubernets/Charts/prometheus/custom_values.yml*, then update via helm:
+```shell script
+helm upgrade prom . -f custom_values.yml --install
+```
+
+visit http://reddit-prometheus/targets
+
+
+
+## Helpful links
+- https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
