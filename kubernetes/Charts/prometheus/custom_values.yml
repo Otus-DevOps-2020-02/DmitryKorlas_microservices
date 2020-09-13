@@ -807,15 +807,66 @@ serverFiles:
             action: replace
             target_label: kubernetes_pod_name
 
-      - job_name: 'reddit-endpoints'
+#      - job_name: 'reddit-endpoints'
+#
+#        kubernetes_sd_configs:
+#          - role: endpoints
+#
+#        relabel_configs:
+#          - source_labels: [ __meta_kubernetes_service_label_app ]
+#            action: keep # Используем действие keep, чтобы оставить
+#            regex: reddit # только эндпоинты сервисов с метками “app=reddit”
+#          - action: labelmap # Отобразить все совпадения групп
+#            regex: __meta_kubernetes_service_label_(.+) # из regex в label’ы Prometheus
+#          - source_labels: [ __meta_kubernetes_namespace ]
+#            target_label: kubernetes_namespace
+#          - source_labels: [ __meta_kubernetes_service_name ]
+#            target_label: kubernetes_name
+
+
+      - job_name: 'post-endpoints'
 
         kubernetes_sd_configs:
           - role: endpoints
 
         relabel_configs:
-          - source_labels: [ __meta_kubernetes_service_label_app ]
+          - source_labels: [ __meta_kubernetes_service_label_component ]
             action: keep # Используем действие keep, чтобы оставить
-            regex: reddit # только эндпоинты сервисов с метками “app=reddit”
+            regex: post # только эндпоинты сервисов с метками “component=post”
+          - action: labelmap # Отобразить все совпадения групп
+            regex: __meta_kubernetes_service_label_(.+) # из regex в label’ы Prometheus
+          - source_labels: [ __meta_kubernetes_namespace ]
+            target_label: kubernetes_namespace
+          - source_labels: [ __meta_kubernetes_service_name ]
+            target_label: kubernetes_name
+
+
+      - job_name: 'comment-endpoints'
+
+        kubernetes_sd_configs:
+          - role: endpoints
+
+        relabel_configs:
+          - source_labels: [ __meta_kubernetes_service_label_component ]
+            action: keep # Используем действие keep, чтобы оставить
+            regex: comment # только эндпоинты сервисов с метками “component=comment”
+          - action: labelmap # Отобразить все совпадения групп
+            regex: __meta_kubernetes_service_label_(.+) # из regex в label’ы Prometheus
+          - source_labels: [ __meta_kubernetes_namespace ]
+            target_label: kubernetes_namespace
+          - source_labels: [ __meta_kubernetes_service_name ]
+            target_label: kubernetes_name
+
+
+      - job_name: 'ui-endpoints'
+
+        kubernetes_sd_configs:
+          - role: endpoints
+
+        relabel_configs:
+          - source_labels: [ __meta_kubernetes_service_label_component ]
+            action: keep # Используем действие keep, чтобы оставить
+            regex: ui # только эндпоинты сервисов с метками “component=ui”
           - action: labelmap # Отобразить все совпадения групп
             regex: __meta_kubernetes_service_label_(.+) # из regex в label’ы Prometheus
           - source_labels: [ __meta_kubernetes_namespace ]
