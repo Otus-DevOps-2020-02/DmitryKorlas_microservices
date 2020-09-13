@@ -1598,7 +1598,10 @@ helm upgrade prom . -f custom_values.yml --install
 
 visit http://reddit-prometheus/targets
 
-
+Let's enable "kubeStateMetrics" in custom_values.yml. Then, update release:
+```shell script
+helm upgrade prom . -f custom_values.yml --install
+```
 
 ## Helpful links
 - https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
