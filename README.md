@@ -1465,3 +1465,97 @@ pvc-6f492a06-a6f3-42e2-bbee-a2aa5fe10dad   15Gi       RWO            Delete     
 
 ## Helpful links
 - https://console.cloud.google.com/networking/routes/
+
+
+# Homework: Lecture 27. Kubernetes - helm
+
+Helm is a package manager for kubernetes.
+
+```shell script
+brew install kubernetes-helm
+```
+
+```shell script
+kubectl apply -f tiller.yml
+helm init --service-account tiller
+```
+
+Check tiller is up
+```shell script
+kubectl get pods -n kube-system --selector app=helm
+NAME                             READY   STATUS    RESTARTS   AGE
+tiller-deploy-8487d94bcf-4jhbs   0/1     Pending   0          19s
+```
+
+Install chart:
+```shell script
+helm install --name test-ui-1 ui/
+```
+
+Setup few releases:
+```shell script
+helm install --name test-ui-2 ui/
+helm install --name test-ui-3 ui/
+```
+
+after creating templates, let's upgrade the apps:
+```shell script
+helm upgrade test-ui-1 ui/
+helm upgrade test-ui-2 ui/
+helm upgrade test-ui-3 ui/
+```
+
+create main `Chart.yaml` in *Charts/reddit/Chart.yaml*
+then, run the command below for loading dependencies - it produces an requrements.lock file.
+```shell script
+helm dep update
+```
+
+Configure DB
+```shell script
+helm search mongo
+```
+
+add mongodb section into requirements.yaml
+```shell script
+# run in dir 'Charts'
+helm install reddit --name reddit-test
+```
+
+```shell script
+helm dep update ./reddit
+helm upgrade
+```
+
+## Add Gitlab CI
+```shell script
+helm repo add gitlab https://charts.gitlab.io
+cd gitlab-omnibus
+helm install --name gitlab . -f values.yaml
+```
+
+find nginx
+```shell script
+kubectl get service -n nginx-ingress nginx
+NAME    TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)                                   AGE
+nginx   LoadBalancer   10.8.13.182   34.70.183.73   80:30194/TCP,443:31181/TCP,22:32603/TCP   64s
+```
+
+modify */etc/hosts/*
+```shell script
+echo "34.70.183.73 gitlab-gitlab staging production" >> /etc/hosts
+```
+
+apply patch to fix nginx ingress roles and permissions:
+```shell script
+kubectl apply -f ../../gitlab-roles.yaml
+```
+
+check pods are running successfully:
+```shell script
+kubectl get pods --all-namespaces -w
+```
+
+
+## Helpful links
+- https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide
