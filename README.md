@@ -1559,3 +1559,95 @@ kubectl get pods --all-namespaces -w
 
 ## Helpful links
 - https://helm.sh/docs/chart_template_guide/#the-chart-template-developer-s-guide
+
+
+# Homework: Lecture 28. Kubernetes. Monitoring and logging.
+
+Install nginx
+```shell script
+helm install stable/nginx-ingress --name nginx
+```
+
+find it:
+```shell script
+kubectl get svc
+NAME                                  TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)                      AGE
+kubernetes                            ClusterIP      10.8.0.1      <none>         443/TCP                      20h
+nginx-nginx-ingress-controller        LoadBalancer   10.8.15.221   34.70.183.73   80:31839/TCP,443:30761/TCP   5m47s
+nginx-nginx-ingress-default-backend   ClusterIP      10.8.4.28     <none>         80/TCP                       5m47s
+reddit-test-comment                   ClusterIP      10.8.0.133    <none>         9292/TCP                     20h
+reddit-test-mongodb                   ClusterIP      10.8.1.150    <none>         27017/TCP                    20h
+reddit-test-post                      ClusterIP      10.8.8.86     <none>         5000/TCP                     20h
+reddit-test-ui                        NodePort       10.8.4.131    <none>         9292:30199/TCP               20h
+```
+
+edit /etc/hosts
+```shell script
+34.70.183.73 reddit reddit-prometheus reddit-grafana reddit-non-prod production redditkibana staging prod
+```
+
+Install Prometheus
+```shell script
+cd kubernetes/Charts/ && helm fetch --untar stable/prometheus
+```
+
+add *kubernets/Charts/prometheus/custom_values.yml*, then update via helm:
+```shell script
+helm upgrade prom . -f custom_values.yml --install
+```
+
+visit http://reddit-prometheus/targets
+
+Let's enable "kubeStateMetrics" in custom_values.yml. Then, update release:
+```shell script
+helm upgrade prom . -f custom_values.yml --install
+```
+
+
+upgrade services:
+```shell script
+helm upgrade reddit-test reddit --install
+helm upgrade production --namespace production ./reddit --install
+helm upgrade staging --namespace staging ./reddit --install
+```
+
+add reddit-endpoints job, then upgrade release:
+```
+helm upgrade prom . -f custom_values.yml --install
+```
+
+Install grafana
+```shell script
+helm upgrade --install grafana stable/grafana --set "adminPassword=admin" \
+--set "service.type=NodePort" \
+--set "ingress.enabled=true" \
+--set "ingress.hosts={reddit-grafana}"
+```
+
+Visit http://reddit-grafana/
+admin/admin
+
+add prometheus datasource
+set server name as `prom-prometheus-server` in result of command:
+```
+kubectl get svc
+```
+
+import this dashboard https://grafana.com/grafana/dashboards/315 as most popular for k8s monitoring
+
+visit http://reddit-grafana/?editview=templating to add new variable
+
+name = namespace
+type = query
+label = env
+datasource = prometheus
+refresh = on dashboard load
+query = label_values(namespace)
+regex = /.+/
+multi values = checked
+include all option = checked
+
+## Helpful links
+- https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+- https://grafana.com/grafana/dashboards/315
+- https://akomljen.com/get-kubernetes-logs-with-efk-stack-in-5-minutes/
